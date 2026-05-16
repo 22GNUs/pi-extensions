@@ -1,0 +1,38 @@
+{
+  "name": "@tifan/pi-copy-all",
+  "version": "0.0.0",
+  "description": "Copy all assistant messages from the current pi session to the clipboard.",
+  "keywords": [
+    "clipboard",
+    "pi",
+    "pi-extension",
+    "pi-package"
+  ],
+  "homepage": "https://github.com/tifandotme/pi-extensions/tree/master/packages/pi-copy-all#readme",
+  "bugs": "https://github.com/tifandotme/pi-extensions/issues",
+  "license": "MIT",
+  "author": "Tifan Avianto <tifan@hadl.ai>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tifandotme/pi-extensions.git",
+    "directory": "packages/pi-copy-all"
+  },
+  "files": [
+    "*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./copy-all.ts"
+    ]
+  }
+}

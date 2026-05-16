@@ -1,0 +1,11 @@
+node_modules/
+.tmp/
+.env
+.env.*
+
+# Bun compile leftovers
+.*.bun-build
+
+# Local agent state
+.claude/
+.pi/

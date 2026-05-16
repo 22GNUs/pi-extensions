@@ -1,0 +1,39 @@
+{
+  "name": "@tifan/pi-titlebar-spinner",
+  "version": "0.0.0",
+  "description": "Show a spinner in the pi titlebar while the agent runs.",
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "pi-package",
+    "spinner",
+    "titlebar"
+  ],
+  "homepage": "https://github.com/tifandotme/pi-extensions/tree/master/packages/pi-titlebar-spinner#readme",
+  "bugs": "https://github.com/tifandotme/pi-extensions/issues",
+  "license": "MIT",
+  "author": "Tifan Avianto <tifan@hadl.ai>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tifandotme/pi-extensions.git",
+    "directory": "packages/pi-titlebar-spinner"
+  },
+  "files": [
+    "*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./titlebar-spinner.ts"
+    ]
+  }
+}

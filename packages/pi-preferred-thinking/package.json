@@ -1,0 +1,39 @@
+{
+  "name": "@tifan/pi-preferred-thinking",
+  "version": "0.0.0",
+  "description": "Persist preferred thinking level per model in pi.",
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "pi-package",
+    "settings",
+    "thinking"
+  ],
+  "homepage": "https://github.com/tifandotme/pi-extensions/tree/master/packages/pi-preferred-thinking#readme",
+  "bugs": "https://github.com/tifandotme/pi-extensions/issues",
+  "license": "MIT",
+  "author": "Tifan Avianto <tifan@hadl.ai>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tifandotme/pi-extensions.git",
+    "directory": "packages/pi-preferred-thinking"
+  },
+  "files": [
+    "*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./preferred-thinking.ts"
+    ]
+  }
+}
