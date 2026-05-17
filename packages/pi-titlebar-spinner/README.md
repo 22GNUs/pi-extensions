@@ -1,6 +1,8 @@
 # @tifan/pi-titlebar-spinner
 
-Show a braille spinner in the pi titlebar while the agent is running. Stops on `agent_end` and `session_shutdown`.
+Show a braille spinner in the pi titlebar while the agent runs.
+
+The spinner starts on `agent_start` and stops on `agent_end` or `session_shutdown`, restoring the default `π - [session - ]cwd` title.
 
 ## Install
 
