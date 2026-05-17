@@ -2,7 +2,7 @@
 
 Monorepo of [pi-coding-agent](https://pi.dev) extensions. Each package in `packages/` is an independent pi extension published to npm under `@tifan/`.
 
-Releases are handled by Tifan. Don't run `bun changeset`, `npm publish`, edit files under `.changeset/`, or bump versions in `package.json`.
+Releases are handled manually. Don't run `bun changeset`, `npm publish`, edit files under `.changeset/`, or bump versions in `package.json`.
 
 ## Structure
 
