@@ -1,6 +1,6 @@
 # pi-extensions
 
-[Pi coding-agent](https://pi.dev) extensions by Tifan.
+A collection of [Pi coding agent](https://pi.dev) extensions.
 
 ## Packages
 
@@ -21,23 +21,6 @@
 pi install npm:@tifan/pi-<name>
 ```
 
-## Local development
-
-Each package is a standalone TypeScript pi extension, loaded by pi via [jiti](https://github.com/unjs/jiti). No build step.
-
-```bash
-bun install
-bun run typecheck
-bun run lint
-bun run format
-```
-
-To try a package locally without publishing:
-
-```bash
-pi install /absolute/path/to/pi-extensions/packages/pi-<name>
-```
-
 ## Releases
 
 Versions and changelogs are managed by [Changesets](https://github.com/changesets/changesets) with the [`changesets/action`](https://github.com/changesets/action) auto-PR flow.
@@ -45,4 +28,22 @@ Versions and changelogs are managed by [Changesets](https://github.com/changeset
 1. Make changes, then `bun changeset` to record intent.
 2. Commit and push the changeset file to `master`.
 3. The action opens or updates a "Version Packages" PR.
-4. Merging that PR triggers npm publish.
+4. Merging that PR triggers npm publish with provenance via OIDC.
+
+### First publish of a new package
+
+OIDC trusted publishing requires the package to already exist on npm, so the first version of a new package must be published manually from a local machine. After that, releases go through the Changesets PR flow above.
+
+1. Publish once locally without provenance:
+
+   ```bash
+   cd packages/pi-<name>
+   npm publish --access public --provenance=false
+   ```
+
+2. Configure the trusted publisher at `https://www.npmjs.com/package/@tifan/pi-<name>/access`:
+   - Publisher: GitHub Actions
+   - Organization: `tifandotme`
+   - Repository: `pi-extensions`
+   - Workflow filename: `release.yml`
+   - Environment: (leave empty)

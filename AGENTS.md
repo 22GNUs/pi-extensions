@@ -2,6 +2,8 @@
 
 Monorepo of [pi-coding-agent](https://pi.dev) extensions. Each package in `packages/` is an independent pi extension published to npm under `@tifan/`.
 
+Releases are handled by Tifan. Don't run `bun changeset`, `npm publish`, edit files under `.changeset/`, or bump versions in `package.json`.
+
 ## Structure
 
 ```
@@ -38,6 +40,20 @@ Available runtime imports (provided by pi at load time):
 
 Pi extension docs: https://pi.dev/docs/latest/extensions
 
+## Local development
+
+Install dependencies once at the repo root:
+
+```bash
+bun install
+```
+
+To try a package without publishing:
+
+```bash
+pi install /absolute/path/to/pi-extensions/packages/pi-<name>
+```
+
 ## Checks after code changes
 
 From the repo root:
@@ -56,30 +72,7 @@ Fix errors before moving on. Keep typecheck before final format because type err
 2. Copy the structure of an existing package: `package.json`, `tsconfig.json`, `README.md`, `LICENSE` (symlink → `../../LICENSE`).
 3. Set `"name": "@tifan/pi-<name>"` and `"pi": { "extensions": ["./<entry>.ts"] }`.
 4. Add `"publishConfig": { "access": "public", "provenance": true }`.
-
-## Releases
-
-This repo uses [Changesets](https://github.com/changesets/changesets) with the [`changesets/action`](https://github.com/changesets/action) auto-PR flow. Direct-to-master is fine.
-
-1. After changes, run `bun changeset`. Select packages, bump level, write summary.
-2. Commit the changeset file along with the code change and push to `master`.
-3. The Release workflow opens or updates a "Version Packages" PR aggregating pending changesets.
-4. Merge that PR to ship: the workflow runs `changeset publish` and pushes tags.
-
-### First publish
-
-The Release workflow uses npm OIDC trusted publishing (`id-token: write`, `publishConfig.provenance: true`). No `NPM_TOKEN` secret is needed at any point.
-
-Before the first publish of a new package, pre-configure it on npmjs.com:
-
-1. Sign in at npmjs.com → **Account settings** → **Trusted publishers** → **Add trusted publisher**.
-2. For each `@tifan/pi-*` package name, add an entry with:
-   - Publisher: GitHub Actions
-   - Organization: `tifandotme`
-   - Repository: `pi-extensions`
-   - Workflow filename: `release.yml`
-   - Environment: (leave empty)
-3. Once all 8 entries exist, push the changeset to `master`. The workflow opens the Version PR; merging it runs `changeset publish`, which mints an OIDC token and publishes with provenance.
+5. Stop there and tell Tifan. The first publish of a new package is manual.
 
 ## Conventions
 
