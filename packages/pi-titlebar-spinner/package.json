@@ -1,6 +1,6 @@
 {
   "name": "@tifan/pi-titlebar-spinner",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Show a spinner in the pi titlebar while the agent runs.",
   "keywords": [
     "pi",

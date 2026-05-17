@@ -68,15 +68,18 @@ This repo uses [Changesets](https://github.com/changesets/changesets) with the [
 
 ### First publish
 
-The Release workflow uses npm OIDC trusted publishing (`id-token: write`, `publishConfig.provenance: true`). Trusted publishing on npmjs.com must be configured **per package**, which requires the package to exist on the registry first. Chicken-and-egg.
+The Release workflow uses npm OIDC trusted publishing (`id-token: write`, `publishConfig.provenance: true`). No `NPM_TOKEN` secret is needed at any point.
 
-Simplest bootstrap:
+Before the first publish of a new package, pre-configure it on npmjs.com:
 
-1. Add an `NPM_TOKEN` repository secret in GitHub Settings.
-2. Temporarily add `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the publish step or create `$HOME/.npmrc` in the workflow.
-3. Ship version 0.1.0 of every package once.
-4. On npmjs.com, configure each package as "Trusted publisher": repo `tifandotme/pi-extensions`, workflow `release.yml`.
-5. Remove the `NPM_TOKEN` secret. Subsequent publishes use OIDC.
+1. Sign in at npmjs.com → **Account settings** → **Trusted publishers** → **Add trusted publisher**.
+2. For each `@tifan/pi-*` package name, add an entry with:
+   - Publisher: GitHub Actions
+   - Organization: `tifandotme`
+   - Repository: `pi-extensions`
+   - Workflow filename: `release.yml`
+   - Environment: (leave empty)
+3. Once all 8 entries exist, push the changeset to `master`. The workflow opens the Version PR; merging it runs `changeset publish`, which mints an OIDC token and publishes with provenance.
 
 ## Conventions
 
