@@ -117,18 +117,15 @@ export async function getFastModelAuth(
     if (configuredAuth) return configuredAuth
   }
 
-  for (const fallbackModel of FAST_MODEL_CANDIDATES) {
-    if (
-      configuredModel &&
-      formatRecapModelKey(fallbackModel) ===
-        formatRecapModelKey(configuredModel)
-    ) {
-      continue
-    }
+  const candidates = configuredModel
+    ? FAST_MODEL_CANDIDATES.filter(
+        (model) =>
+          formatRecapModelKey(model) !== formatRecapModelKey(configuredModel),
+      )
+    : FAST_MODEL_CANDIDATES
 
-    const fallbackAuth = await getModelAuth(ctx, fallbackModel)
-    if (fallbackAuth) return fallbackAuth
-  }
-
-  return undefined
+  const results = await Promise.all(
+    candidates.map((model) => getModelAuth(ctx, model)),
+  )
+  return results.find((auth) => auth !== undefined)
 }
