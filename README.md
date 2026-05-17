@@ -46,9 +46,3 @@ Versions and changelogs are managed by [Changesets](https://github.com/changeset
 2. Commit and push the changeset file to `master`.
 3. The action opens or updates a "Version Packages" PR.
 4. Merging that PR triggers npm publish.
-
-See [`AGENTS.md`](AGENTS.md) for contributor notes.
-
-## License
-
-[MIT](LICENSE)
