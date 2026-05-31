@@ -1,8 +1,10 @@
 # @tifan/pi-recap
 
-Rolling session recap shown in the pi titlebar.
+Show a one-line session recap on demand or after you have been away.
 
-After each agent response, the previous recap and the latest exchange are sent to a fast model, which returns a single-sentence update of session state. Recaps are best-effort: transient failures keep the previous recap.
+`pi-recap` helps you re-enter a session without rereading the transcript. It summarizes the current session state, important decisions, relevant files or commands, and the likely next action.
+
+![Recap widget showing a generated session recap](images/recap-widget-showing.png)
 
 ## Install
 
@@ -10,14 +12,34 @@ After each agent response, the previous recap and the latest exchange are sent t
 pi install npm:@tifan/pi-recap
 ```
 
+## Behavior
+
+- `/recap` generates a fresh recap and shows it above the editor.
+- After each agent response, `pi-recap` waits 5 minutes. If you stay idle, it generates one automatic recap.
+- On resume, `pi-recap` shows the saved recap if it is current. If it is stale or missing, it generates a fresh recap.
+- The recap clears when you send a non-`/recap` message.
+
+## Context
+
+Recaps use pi's current session context. That means they follow the active branch and respect compaction.
+
+`pi-recap` does not scrape the full session file or terminal history. It summarizes the same branch-aware, compaction-aware messages that pi keeps in context.
+
+The latest recap is stored as a custom session entry. Recap entries do not participate in LLM context.
+
+`/recap status` reports whether the stored recap is current, stale, or missing.
+
 ## Commands
 
-- `/recap status`: Show the selected model, the active model, and whether a recap is available.
+- `/recap`: Generate and show a fresh recap.
+- `/recap status`: Show selected model, active model, recap freshness, and whether the recap is visible.
 - `/recap help`: List recap commands.
+
+Subcommands appear in autocomplete when you type `/recap `.
 
 ## Configuration
 
-Set the recap model in `settings.json` (project or user scope):
+Set the recap model in `settings.json` at project or user scope:
 
 ```json
 {
@@ -33,14 +55,6 @@ Use `auto` or omit the key to fall back to the first available model from this l
 2. `openai-codex/gpt-5.3-codex-spark`
 3. `anthropic/claude-haiku-4-5`
 4. `anthropic/claude-haiku-4-5-20251001`
-
-## Credits
-
-Fork of [`richtan/pi-tldr`](https://github.com/richtan/pi-tldr).
-
-Changes from upstream:
-
-- Recap runs after the agent finishes responding, not after every tool call. Matches Claude Code's behavior.
 
 ## License
 

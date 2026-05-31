@@ -1,7 +1,7 @@
 {
   "name": "@tifan/pi-recap",
   "version": "0.1.1",
-  "description": "Rolling session recap shown in the pi titlebar.",
+  "description": "One-line session recap on demand or after you have been away.",
   "keywords": [
     "pi",
     "pi-extension",
