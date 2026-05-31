@@ -39,13 +39,11 @@ Subcommands appear in autocomplete when you type `/recap `.
 
 ## Configuration
 
-Set the recap model in `settings.json` at project or user scope:
+Set the recap model in `~/.config/pi/extensions/pi-recap.json`:
 
 ```json
 {
-  "recap": {
-    "model": "openai-codex/gpt-5.4-mini"
-  }
+  "model": "openai-codex/gpt-5.4-mini"
 }
 ```
 

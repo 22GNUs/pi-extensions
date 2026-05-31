@@ -1,6 +1,8 @@
 # @tifan/pi-preferred-thinking
 
-Persist a preferred thinking level per model in pi's `settings.json`. When you switch models, the extension restores the level you last set for that model.
+Apply per-model thinking levels from `~/.config/pi/extensions/pi-preferred-thinking.json` when sessions start or models change.
+
+This extension is for model-specific preferences. Pi's built-in `defaultThinkingLevel` remains global, while `preferredThinking` lets you choose different levels for different models. Invalid or missing values are ignored.
 
 ## Install
 
@@ -10,7 +12,7 @@ pi install npm:@tifan/pi-preferred-thinking
 
 ## Configuration
 
-Add a `preferredThinking` map keyed by `<provider>/<model-id>` in `settings.json`:
+Create `~/.config/pi/extensions/pi-preferred-thinking.json` with a `preferredThinking` map keyed by `<provider>/<model-id>`:
 
 ```json
 {

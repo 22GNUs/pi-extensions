@@ -4,11 +4,15 @@ import { getAgentDir, type ExtensionAPI } from "@earendil-works/pi-coding-agent"
 
 type ThinkingLevel = Parameters<ExtensionAPI["setThinkingLevel"]>[0]
 
-type PreferredThinkingSettings = {
+type PreferredThinkingConfig = {
   preferredThinking?: Record<string, unknown>
 }
 
-const SETTINGS_PATH = path.join(getAgentDir(), "settings.json")
+const CONFIG_PATH = path.join(
+  getAgentDir(),
+  "extensions",
+  "pi-preferred-thinking.json",
+)
 const VALID_THINKING_LEVELS = new Set<ThinkingLevel>([
   "off",
   "minimal",
@@ -24,9 +28,9 @@ function getModelKey(provider: string, modelId: string): string {
 
 function readPreferredThinking(): Readonly<Record<string, ThinkingLevel>> {
   try {
-    const content = readFileSync(SETTINGS_PATH, "utf-8")
-    const settings = JSON.parse(content) as PreferredThinkingSettings
-    const configured = settings.preferredThinking
+    const content = readFileSync(CONFIG_PATH, "utf-8")
+    const config = JSON.parse(content) as PreferredThinkingConfig
+    const configured = config.preferredThinking
     if (!configured || typeof configured !== "object") return {}
 
     const preferredThinking: Record<string, ThinkingLevel> = {}

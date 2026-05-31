@@ -1,8 +1,12 @@
+import { readFileSync } from "node:fs"
+import path from "node:path"
 import type { Api, Model } from "@earendil-works/pi-ai"
-import type { ExtensionContext } from "@earendil-works/pi-coding-agent"
-import { SettingsManager } from "@earendil-works/pi-coding-agent"
+import {
+  getAgentDir,
+  type ExtensionContext,
+} from "@earendil-works/pi-coding-agent"
 
-const SETTINGS_KEY = "recap"
+const CONFIG_PATH = path.join(getAgentDir(), "extensions", "pi-recap.json")
 
 export interface RecapModelPreference {
   readonly provider: string
@@ -22,9 +26,8 @@ const FAST_MODEL_CANDIDATES: readonly RecapModelPreference[] = [
   { provider: "anthropic", id: "claude-haiku-4-5-20251001" },
 ]
 
-interface SettingsModelValue {
-  readonly present: boolean
-  readonly value?: string
+interface RecapConfig {
+  readonly model?: unknown
 }
 
 export function formatModelPreference(
@@ -57,35 +60,18 @@ function parseModelSpec(value: string): RecapModelPreference | undefined {
   }
 }
 
-function settingsModelValue(
-  settings: Record<string, unknown>,
-): SettingsModelValue {
-  const section = settings[SETTINGS_KEY]
-  if (!section || typeof section !== "object" || Array.isArray(section)) {
-    return { present: false }
+export function resolveInitialModelPreference():
+  | RecapModelPreference
+  | undefined {
+  try {
+    const content = readFileSync(CONFIG_PATH, "utf-8")
+    const config = JSON.parse(content) as RecapConfig
+    return typeof config.model === "string"
+      ? parseModelSpec(config.model)
+      : undefined
+  } catch {
+    return undefined
   }
-
-  const value = (section as Record<string, unknown>)["model"]
-  return typeof value === "string"
-    ? { present: true, value }
-    : { present: "model" in (section as Record<string, unknown>) }
-}
-
-export function resolveInitialModelPreference(
-  cwd: string,
-): RecapModelPreference | undefined {
-  const settings = SettingsManager.create(cwd)
-  const projectModel = settingsModelValue(
-    settings.getProjectSettings() as Record<string, unknown>,
-  )
-  if (projectModel.present) {
-    return projectModel.value ? parseModelSpec(projectModel.value) : undefined
-  }
-
-  const userModel = settingsModelValue(
-    settings.getGlobalSettings() as Record<string, unknown>,
-  )
-  return userModel.value ? parseModelSpec(userModel.value) : undefined
 }
 
 async function getModelAuth(

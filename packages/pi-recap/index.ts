@@ -404,7 +404,7 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_start", (_event, ctx) => {
     state.sessionActive = true
-    state.selectedModel = resolveInitialModelPreference(ctx.cwd)
+    state.selectedModel = resolveInitialModelPreference()
     resetRecapSession(ctx, state)
     restoreRecapState(ctx, state)
 
