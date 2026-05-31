@@ -15,6 +15,8 @@ A collection of [Pi coding agent](https://pi.dev) extensions.
 | [`@tifan/pi-recap`](packages/pi-recap)                           | One-line session recap on demand or after you have been away.      |
 | [`@tifan/pi-titlebar-spinner`](packages/pi-titlebar-spinner)     | Spinner in the pi titlebar while the agent runs.                   |
 
+Wondering which packages I use myself? See my [current pi settings](https://github.com/tifandotme/dotfiles/blob/master/dot_config/pi/private_settings.json).
+
 ## Install
 
 ```bash
