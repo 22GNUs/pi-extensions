@@ -20,14 +20,3 @@ A collection of [Pi coding agent](https://pi.dev) extensions.
 ```bash
 pi install npm:@tifan/pi-<name>
 ```
-
-## Releases
-
-To release a package:
-
-1. Run `bun changeset` and select the package to release.
-2. Choose the version bump: patch, minor, or major.
-3. Commit the package changes and the new `.changeset/*.md` file.
-4. Push to `master`.
-5. GitHub Actions opens or updates the `chore: version packages` release PR.
-6. Merge that PR to publish the package to npm.
