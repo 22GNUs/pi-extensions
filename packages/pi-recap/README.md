@@ -42,6 +42,8 @@ Subcommands appear in autocomplete when you type `/recap `.
 
 Run `/recap config` to choose the recap model.
 
+![Recap model selector showing available model choices](images/recap-model-selector.png)
+
 Choose `auto` to fall back to the first available model from this list:
 
 1. `openai-codex/gpt-5.4-mini`
