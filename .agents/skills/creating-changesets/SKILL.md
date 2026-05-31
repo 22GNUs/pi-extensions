@@ -14,17 +14,18 @@ Create Changesets files directly. Do not run `bun changeset` unless the user exp
    ```bash
    git diff -- packages/<package-name>
    ```
-3. Choose the bump type:
+3. Identify what already existed before the diff, then describe only the new user-facing behavior. Do not say "add" for a feature that was already present and only gained a refinement. For example, if a command already had a picker and the diff adds a preview pane, write "Add a full-text preview to the response picker", not "Add a response picker".
+4. Choose the bump type:
    - `patch`: fixes, docs, internal behavior corrections.
    - `minor`: new user-facing commands, options, or capabilities.
    - `major`: breaking changes.
-4. Prefer one changeset file per package when summaries differ.
-5. Use one combined changeset only when the same release note accurately describes all packages.
-6. Create a short, lowercase filename under `.changeset/`, for example:
+5. Prefer one changeset file per package when summaries differ.
+6. Use one combined changeset only when the same release note accurately describes all packages.
+7. Create a short, lowercase filename under `.changeset/`, for example:
    ```text
    .changeset/add-recap-config.md
    ```
-7. Write concise frontmatter and one plain summary paragraph.
+8. Write concise frontmatter and one plain summary paragraph.
 
 ## Examples
 
@@ -55,4 +56,5 @@ Add interactive configuration commands for model-related extension settings.
 - Do not publish packages.
 - Do not edit existing changeset files unless the user asks.
 - Keep summaries user-facing. Mention command names and behavior, not implementation details.
+- Avoid overstating scope. Compare removed and added lines, then name the delta precisely.
 - If repository instructions conflict with a direct user request to create a changeset, follow the direct request and create the smallest correct changeset file.
