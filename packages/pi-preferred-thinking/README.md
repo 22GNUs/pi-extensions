@@ -4,6 +4,8 @@ Apply per-model thinking levels from `~/.config/pi/extensions/pi-preferred-think
 
 This extension is for model-specific preferences. Pi's built-in `defaultThinkingLevel` remains global, while `preferredThinking` lets you choose different levels for different models. Invalid or missing values are ignored.
 
+![Preferred thinking picker showing model-specific thinking levels](images/picker.png)
+
 ## Install
 
 ```bash
@@ -12,7 +14,11 @@ pi install npm:@tifan/pi-preferred-thinking
 
 ## Configuration
 
-Create `~/.config/pi/extensions/pi-preferred-thinking.json` with a `preferredThinking` map keyed by `<provider>/<model-id>`:
+Run `/preferred-thinking` to set or unset the preferred thinking level for the current model.
+
+Valid levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`.
+
+The extension saves preferences in `~/.config/pi/extensions/pi-preferred-thinking.json`:
 
 ```json
 {
@@ -22,8 +28,6 @@ Create `~/.config/pi/extensions/pi-preferred-thinking.json` with a `preferredThi
   }
 }
 ```
-
-Valid levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`.
 
 ## License
 
