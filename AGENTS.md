@@ -7,15 +7,7 @@ Release publishing is handled manually. For release notes, use the `creating-cha
 ## Structure
 
 ```
-packages/
-  pi-copy-all/
-  pi-friction/
-  pi-handoff/
-  pi-inline-skills/
-  pi-mermaid-open/
-  pi-preferred-thinking/
-  pi-recap/
-  pi-titlebar-spinner/
+packages/pi-*/
 ```
 
 Each package has:
