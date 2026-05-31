@@ -20,8 +20,8 @@
         "typescript": "6.0.3",
       },
     },
-    "packages/pi-copy-all": {
-      "name": "@tifan/pi-copy-all",
+    "packages/pi-copy-response": {
+      "name": "@tifan/pi-copy-response",
       "version": "0.1.1",
     },
     "packages/pi-friction": {
@@ -42,11 +42,11 @@
     },
     "packages/pi-preferred-thinking": {
       "name": "@tifan/pi-preferred-thinking",
-      "version": "0.1.1",
+      "version": "0.2.0",
     },
     "packages/pi-recap": {
       "name": "@tifan/pi-recap",
-      "version": "0.2.0",
+      "version": "0.3.0",
     },
     "packages/pi-titlebar-spinner": {
       "name": "@tifan/pi-titlebar-spinner",
@@ -310,7 +310,7 @@
 
     "@smithy/util-utf8": ["@smithy/util-utf8@2.3.0", "", { "dependencies": { "@smithy/util-buffer-from": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-R8Rdn8Hy72KKcebgLiv8jQcQkXoLMOGGv5uI1/k0l+snqkOzQ1R0ChUBCxWMlBsFMekWjq0wRudIweFs7sKT5A=="],
 
-    "@tifan/pi-copy-all": ["@tifan/pi-copy-all@workspace:packages/pi-copy-all"],
+    "@tifan/pi-copy-response": ["@tifan/pi-copy-response@workspace:packages/pi-copy-response"],
 
     "@tifan/pi-friction": ["@tifan/pi-friction@workspace:packages/pi-friction"],
 
