@@ -11,10 +11,14 @@ import {
   serializeConversation,
 } from "@earendil-works/pi-coding-agent"
 import {
+  FAST_MODEL_CANDIDATES,
   formatAuthModelKey,
   formatModelPreference,
+  formatRecapModelKey,
   getFastModelAuth,
+  parseModelSpec,
   resolveInitialModelPreference,
+  saveModelPreference,
   type RecapModelPreference,
 } from "./models.js"
 import { sanitizeRecapText } from "./sanitize.js"
@@ -46,6 +50,11 @@ const RECAP_SUBCOMMANDS: AutocompleteItem[] = [
     value: "status",
     label: "status",
     description: "Show model and recap status",
+  },
+  {
+    value: "config",
+    label: "config",
+    description: "Choose the recap model",
   },
   {
     value: "help",
@@ -319,6 +328,68 @@ function getRecapArgumentCompletions(
   return items.length > 0 ? items : null
 }
 
+async function promptForCustomModel(
+  ctx: ExtensionContext,
+): Promise<RecapModelPreference | undefined> {
+  const value = await ctx.ui.input("Custom recap model", "provider/model-id")
+  if (value === undefined) return undefined
+
+  const modelPreference = parseModelSpec(value)
+  if (!modelPreference) {
+    notifyUser(ctx, "Use provider/model-id for custom recap models.", "error")
+    return undefined
+  }
+
+  const model = ctx.modelRegistry.find(
+    modelPreference.provider,
+    modelPreference.id,
+  )
+  if (!model) {
+    notifyUser(
+      ctx,
+      `Unknown model: ${formatRecapModelKey(modelPreference)}`,
+      "error",
+    )
+    return undefined
+  }
+
+  return modelPreference
+}
+
+async function configureRecapModel(
+  ctx: ExtensionContext,
+  state: RecapState,
+): Promise<void> {
+  const customOption = "custom..."
+  const options = [
+    "auto",
+    ...FAST_MODEL_CANDIDATES.map(formatRecapModelKey),
+    customOption,
+  ]
+  const selected = await ctx.ui.select("Recap model", options)
+  if (selected === undefined) return
+
+  const modelPreference =
+    selected === customOption
+      ? await promptForCustomModel(ctx)
+      : parseModelSpec(selected)
+  if (selected === customOption && modelPreference === undefined) return
+
+  try {
+    saveModelPreference(modelPreference)
+    state.selectedModel = modelPreference
+    notifyUser(
+      ctx,
+      `Recap model set to ${formatModelPreference(modelPreference)}.`,
+      "info",
+    )
+  } catch (error) {
+    const reason =
+      error instanceof SyntaxError ? "invalid JSON" : "write failed"
+    notifyUser(ctx, `Could not update recap config: ${reason}.`, "error")
+  }
+}
+
 function registerRecapCommand(pi: ExtensionAPI, state: RecapState): void {
   pi.registerCommand("recap", {
     description: "generate a one-line session recap",
@@ -340,6 +411,7 @@ function registerRecapCommand(pi: ExtensionAPI, state: RecapState): void {
             "pi-recap commands",
             "/recap - generate and show a fresh recap",
             "/recap status - show model and recap status",
+            "/recap config - choose the recap model",
             "/recap help - show this help",
           ].join("\n"),
           "info",
@@ -352,7 +424,12 @@ function registerRecapCommand(pi: ExtensionAPI, state: RecapState): void {
         return
       }
 
-      notifyUser(ctx, "Use /recap [help|status]", "error")
+      if (action === "config") {
+        await configureRecapModel(ctx, state)
+        return
+      }
+
+      notifyUser(ctx, "Use /recap [config|help|status]", "error")
     },
   })
 }

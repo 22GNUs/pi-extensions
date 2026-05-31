@@ -33,26 +33,29 @@ The latest recap is stored as a custom session entry. Recap entries do not parti
 
 - `/recap`: Generate and show a fresh recap.
 - `/recap status`: Show selected model, active model, recap freshness, and whether the recap is visible.
+- `/recap config`: Choose the recap model.
 - `/recap help`: List recap commands.
 
 Subcommands appear in autocomplete when you type `/recap `.
 
 ## Configuration
 
-Set the recap model in `~/.config/pi/extensions/pi-recap.json`:
+Run `/recap config` to choose the recap model.
+
+Choose `auto` to fall back to the first available model from this list:
+
+1. `openai-codex/gpt-5.4-mini`
+2. `openai-codex/gpt-5.3-codex-spark`
+3. `anthropic/claude-haiku-4-5`
+4. `anthropic/claude-haiku-4-5-20251001`
+
+You can also edit `~/.config/pi/extensions/pi-recap.json` manually:
 
 ```json
 {
   "model": "openai-codex/gpt-5.4-mini"
 }
 ```
-
-Use `auto` or omit the key to fall back to the first available model from this list:
-
-1. `openai-codex/gpt-5.4-mini`
-2. `openai-codex/gpt-5.3-codex-spark`
-3. `anthropic/claude-haiku-4-5`
-4. `anthropic/claude-haiku-4-5-20251001`
 
 ## License
 
