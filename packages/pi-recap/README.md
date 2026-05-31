@@ -4,7 +4,7 @@ Show a one-line session recap on demand or after you have been away.
 
 `pi-recap` helps you re-enter a session without rereading the transcript. It summarizes the current session state, important decisions, relevant files or commands, and the likely next action.
 
-![Recap widget showing a generated session recap](images/recap-widget-showing.png)
+<img width="1421" height="158" alt="recap-widget-showing" src="https://github.com/user-attachments/assets/dcd3782c-6154-46ea-a015-cffd836ee3c1" />
 
 ## Install
 
@@ -42,7 +42,7 @@ Subcommands appear in autocomplete when you type `/recap `.
 
 Run `/recap config` to choose the recap model.
 
-![Recap model selector showing available model choices](images/recap-model-selector.png)
+<img width="674" height="245" alt="recap-model-selector" src="https://github.com/user-attachments/assets/f12d8f75-e2f9-4fc7-8392-78cf00c3496a" />
 
 Choose `auto` to fall back to the first available model from this list:
 
