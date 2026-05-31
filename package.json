@@ -24,18 +24,18 @@
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
-    "@earendil-works/pi-agent-core": "^0.74.0",
-    "@earendil-works/pi-ai": "^0.74.0",
-    "@earendil-works/pi-coding-agent": "^0.74.0",
-    "@earendil-works/pi-tui": "^0.74.0",
+    "@earendil-works/pi-agent-core": "^0.78.0",
+    "@earendil-works/pi-ai": "^0.78.0",
+    "@earendil-works/pi-coding-agent": "^0.78.0",
+    "@earendil-works/pi-tui": "^0.78.0",
     "@tsconfig/node24": "24.0.4",
     "@tsconfig/strictest": "2.0.8",
-    "@types/node": "^22.0.0",
-    "oxfmt": "^0.47.0",
-    "oxlint": "^1.62.0",
-    "typebox": "1.1.38",
+    "@types/node": "^24",
+    "oxfmt": "^0.52.0",
+    "oxlint": "^1.67.0",
+    "typebox": "1.1.39",
     "typescript": "6.0.3"
   },
   "engines": {
