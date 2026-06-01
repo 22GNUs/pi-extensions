@@ -2,9 +2,9 @@
 
 Apply per-model thinking levels from `~/.config/pi/extensions/pi-preferred-thinking.json` when sessions start or models change.
 
-<img width="718" height="258" alt="picker" src="https://github.com/user-attachments/assets/5f534314-ecc9-450f-80d6-49818d4a16b0" />
-
 This extension is for model-specific preferences. Pi's built-in `defaultThinkingLevel` remains global, while `preferredThinking` lets you choose different levels for different models. Invalid or missing values are ignored.
+
+![Preferred thinking picker showing model-specific thinking levels](images/picker.png)
 
 ## Install
 
