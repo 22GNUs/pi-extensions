@@ -29,6 +29,10 @@ The extension saves preferences in `~/.config/pi/extensions/pi-preferred-thinkin
 }
 ```
 
+## Release notes
+
+See [CHANGELOG.md](CHANGELOG.md)
+
 ## License
 
 [MIT](LICENSE)

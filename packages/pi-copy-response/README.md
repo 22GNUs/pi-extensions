@@ -16,6 +16,10 @@ pi install npm:@tifan/pi-copy-response
 
 - `/copy-response`: Open a response picker, preview the selected assistant response on the right, and copy it.
 
+## Release notes
+
+See [CHANGELOG.md](CHANGELOG.md)
+
 ## License
 
 [MIT](LICENSE)
