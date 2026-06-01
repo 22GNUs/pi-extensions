@@ -15,6 +15,10 @@ The spinner starts on `agent_start` and stops on `agent_end` or `session_shutdow
 pi install npm:@tifan/pi-titlebar-spinner
 ```
 
+## Release notes
+
+See [CHANGELOG.md](CHANGELOG.md)
+
 ## License
 
 [MIT](LICENSE)
