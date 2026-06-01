@@ -65,10 +65,15 @@ const RECAP_SUBCOMMANDS: AutocompleteItem[] = [
 
 const RECAP_SYSTEM_PROMPT = `You write compact recaps for an AI coding-agent session.
 
-Given the current session context, produce one plain-text sentence.
-Include current status, key decisions, files or commands only if they matter, and the likely next action.
+Given the current session context, produce one plain-text sentence for the user to resume later.
+Start with the user's goal or reason for the session, inferred from user messages. Do not start with the assistant's answer.
+Then include the current outcome, important decision, touched file, blocker, or likely next action only if it helps resume.
+Prefer: Goal/purpose. Current state. Next action.
 Target about 160 characters. Stay under 240 characters.
-Do not add a label or prefix. Do not use markdown. Do not mention yourself as "the assistant".`
+Do not add a label or prefix. Do not use markdown. Do not mention yourself as "the assistant".
+
+Good: Deciding whether pi-inline-skills should switch from $skill to /skill. Recommendation is / only with commands winning; next decide whether leading /skill should expand.
+Bad: Feasible; I’d default to / and skip config. Extension commands win first; next decide whether leading /skill tokens should expand.`
 
 interface RecapState {
   sessionActive: boolean
