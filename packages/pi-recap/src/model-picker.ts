@@ -24,7 +24,7 @@ export type ModelPickerResult =
 interface ModelPickerItem {
   readonly value: string
   readonly label: string
-  readonly description: string
+  readonly description?: string
   readonly model?: RecapModelPreference
 }
 
@@ -50,7 +50,6 @@ class RecapModelPicker implements Component, Focusable {
       ...models.map((model) => ({
         value: formatRecapModelKey(model),
         label: formatRecapModelKey(model),
-        description: "authenticated",
         model,
       })),
     ]
@@ -156,7 +155,9 @@ class RecapModelPicker implements Component, Focusable {
     const label = isSelected
       ? this.theme.fg("accent", item.label)
       : this.theme.fg("text", item.label)
-    const description = this.theme.fg("dim", ` ${item.description}`)
+    const description = item.description
+      ? this.theme.fg("dim", ` ${item.description}`)
+      : ""
     return truncateToWidth(`${prefix}${label}${description}`, width)
   }
 
@@ -190,7 +191,7 @@ class RecapModelPicker implements Component, Focusable {
     return this.items.filter(
       (item) =>
         item.label.toLowerCase().includes(filter) ||
-        item.description.toLowerCase().includes(filter),
+        item.description?.toLowerCase().includes(filter),
     )
   }
 }
@@ -208,27 +209,38 @@ function getVisibleStartIndex(
   )
 }
 
+class HiddenFooter implements Component {
+  invalidate(): void {}
+
+  render(): string[] {
+    return []
+  }
+}
+
 export async function pickRecapModel(
   ctx: ExtensionContext,
   models: readonly RecapModelPreference[],
 ): Promise<ModelPickerResult> {
   if (!ctx.hasUI) return { action: "cancel" }
 
-  return ctx.ui.custom<ModelPickerResult>((tui, theme, _keybindings, done) => {
-    const picker = new RecapModelPicker(theme, models, done)
-    return {
-      get focused() {
-        return picker.focused
-      },
-      set focused(value: boolean) {
-        picker.focused = value
-      },
-      render: (width) => picker.render(width),
-      invalidate: () => picker.invalidate(),
-      handleInput: (data) => {
-        picker.handleInput(data)
-        tui.requestRender()
-      },
-    }
-  })
+  ctx.ui.setFooter(() => new HiddenFooter())
+  return ctx.ui
+    .custom<ModelPickerResult>((tui, theme, _keybindings, done) => {
+      const picker = new RecapModelPicker(theme, models, done)
+      return {
+        get focused() {
+          return picker.focused
+        },
+        set focused(value: boolean) {
+          picker.focused = value
+        },
+        render: (width) => picker.render(width),
+        invalidate: () => picker.invalidate(),
+        handleInput: (data) => {
+          picker.handleInput(data)
+          tui.requestRender()
+        },
+      }
+    })
+    .finally(() => ctx.ui.setFooter(undefined))
 }
