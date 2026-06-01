@@ -13,7 +13,8 @@ packages/pi-*/
 Each package has:
 
 - `package.json` with `"pi": { "extensions": [...] }` declaring entry points and `keywords: ["pi-package", "pi-extension"]`.
-- One or more entry `.ts` files at the package root (flat, no `src/`).
+- `src/index.ts` as the pi extension entry point.
+- Supporting `.ts` files in `src/`.
 - `tsconfig.json` extending `../../tsconfig.base.json`.
 - `LICENSE` symlinked to the root `LICENSE`.
 - `README.md` with install snippet, tools/commands list, and a `Credits` section if the package is a fork.
@@ -62,15 +63,16 @@ Fix errors before moving on. Keep typecheck before final format because type err
 
 1. Create `packages/pi-<name>/`.
 2. Copy the structure of an existing package: `package.json`, `tsconfig.json`, `README.md`, `LICENSE` (symlink → `../../LICENSE`).
-3. Set `"name": "@tifan/pi-<name>"` and `"pi": { "extensions": ["./<entry>.ts"] }`.
-4. Add `"publishConfig": { "access": "public", "provenance": true }`.
-5. Stop there and tell Tifan. The first publish of a new package is manual.
+3. Add the extension entry point at `src/index.ts`.
+4. Set `"name": "@tifan/pi-<name>"` and `"pi": { "extensions": ["./src/index.ts"] }`.
+5. Add `"publishConfig": { "access": "public", "provenance": true }`.
+6. Stop there and tell Tifan. The first publish of a new package is manual.
 
 ## Conventions
 
 - TypeScript, no build step.
 - Conventional Commits (`feat`, `fix`, `chore`, `docs`, ...). Lowercase subject, no period, header under 72 chars.
 - One npm package per extension. No cross-package imports.
-- Flat file layout inside each package (no `src/`).
+- Keep package TypeScript under `src/`.
 - `master` is the default branch.
 - Bun is the package manager; commit `bun.lock`.
