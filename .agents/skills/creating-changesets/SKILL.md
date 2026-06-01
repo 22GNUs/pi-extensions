@@ -9,23 +9,27 @@ Create Changesets files directly. Do not run `bun changeset` unless the user exp
 
 ## Workflow
 
-1. If the package is not provided, ask which package or packages should get a changeset before inspecting diffs.
-2. Inspect the relevant package diffs:
+1. Read staged files first to determine which packages changed:
    ```bash
-   git diff -- packages/<package-name>
+   git diff --staged --name-only
    ```
-3. Identify what already existed before the diff, then describe only the new user-facing behavior. Do not say "add" for a feature that was already present and only gained a refinement. For example, if a command already had a picker and the diff adds a preview pane, write "Add a full-text preview to the response picker", not "Add a response picker".
-4. Choose the bump type:
+2. If no relevant staged package files are present, ask which package or packages should get a changeset.
+3. Inspect the staged package diffs:
+   ```bash
+   git diff --staged -- packages/<package-name>
+   ```
+4. Identify what already existed before the staged diff, then describe only the new user-facing behavior. Do not say "add" for a feature that was already present and only gained a refinement. For example, if a command already had a picker and the diff adds a preview pane, write "Add a full-text preview to the response picker", not "Add a response picker".
+5. Choose the bump type:
    - `patch`: fixes, docs, internal behavior corrections.
    - `minor`: new user-facing commands, options, or capabilities.
    - `major`: breaking changes.
-5. Prefer one changeset file per package when summaries differ.
-6. Use one combined changeset only when the same release note accurately describes all packages.
-7. Create a short, lowercase filename under `.changeset/`, for example:
+6. Prefer one changeset file per package when summaries differ.
+7. Use one combined changeset only when the same release note accurately describes all packages.
+8. Create a short, lowercase filename under `.changeset/`, for example:
    ```text
    .changeset/add-recap-config.md
    ```
-8. Write concise frontmatter and one plain summary paragraph.
+9. Write concise frontmatter and one plain summary paragraph.
 
 ## Examples
 
