@@ -19,7 +19,7 @@
     "directory": "packages/pi-preferred-thinking"
   },
   "files": [
-    "*.ts",
+    "src/**/*.ts",
     "README.md",
     "LICENSE"
   ],
@@ -33,7 +33,7 @@
   },
   "pi": {
     "extensions": [
-      "./preferred-thinking.ts"
+      "./src/index.ts"
     ]
   }
 }

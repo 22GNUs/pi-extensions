@@ -4,7 +4,7 @@ Apply per-model thinking levels from `~/.config/pi/extensions/pi-preferred-think
 
 This extension is for model-specific preferences. Pi's built-in `defaultThinkingLevel` remains global, while `preferredThinking` lets you choose different levels for different models. Invalid or missing values are ignored.
 
-![Preferred thinking picker showing model-specific thinking levels](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-preferred-thinking/assets/picker.webp?raw=1)
+![Preferred thinking picker showing model-specific thinking levels](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-preferred-thinking/assets/picker.webp)
 
 ## Install
 
