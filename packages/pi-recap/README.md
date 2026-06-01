@@ -36,24 +36,23 @@ The latest recap is stored as a custom session entry. Recap entries do not parti
 ## Commands
 
 - `/recap`: Generate and show a fresh recap.
-- `/recap status`: Show selected model, active model, recap freshness, and whether the recap is visible.
-- `/recap config`: Choose the recap model.
+- `/recap status`: Show the selected model, active model, recap freshness, and whether the recap is visible.
+- `/recap config`: Choose an authenticated recap model.
 - `/recap help`: List recap commands.
-
-Subcommands appear in autocomplete when you type `/recap `.
 
 ## Configuration
 
-Run `/recap config` to choose the recap model.
+Out of the box, `pi-recap` uses this default model when it is authenticated:
+
+```text
+openai-codex/gpt-5.4-mini
+```
+
+Run `/recap config` to choose a different authenticated model. The picker shows models available in pi that already have usable auth, and it includes search.
 
 ![Recap model selector showing available model choices](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-recap/assets/recap-model-selector.webp)
 
-Choose `auto` to fall back to the first available model from this list:
-
-1. `openai-codex/gpt-5.4-mini`
-2. `openai-codex/gpt-5.3-codex-spark`
-3. `anthropic/claude-haiku-4-5`
-4. `anthropic/claude-haiku-4-5-20251001`
+After you choose a model, `pi-recap` uses only that model. If it is no longer authenticated, recap generation fails visibly instead. Choose `Use default` in `/recap config` to delete the config file and return to the default.
 
 You can also edit `~/.config/pi/extensions/pi-recap.json` manually:
 

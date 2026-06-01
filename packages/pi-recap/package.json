@@ -19,7 +19,7 @@
     "directory": "packages/pi-recap"
   },
   "files": [
-    "*.ts",
+    "src/**/*.ts",
     "README.md",
     "LICENSE"
   ],
@@ -33,7 +33,7 @@
   },
   "pi": {
     "extensions": [
-      "./index.ts"
+      "./src/index.ts"
     ]
   }
 }

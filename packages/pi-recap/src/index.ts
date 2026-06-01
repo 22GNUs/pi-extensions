@@ -10,16 +10,18 @@ import {
   convertToLlm,
   serializeConversation,
 } from "@earendil-works/pi-coding-agent"
+import { pickRecapModel } from "./model-picker.js"
 import {
-  FAST_MODEL_CANDIDATES,
+  deleteRecapConfig,
   formatAuthModelKey,
   formatModelPreference,
   formatRecapModelKey,
-  getFastModelAuth,
-  parseModelSpec,
-  resolveInitialModelPreference,
+  getAuthenticatedTextModelPreferences,
+  getRecapModelAuth,
+  resolveInitialModelConfig,
   saveModelPreference,
-  type RecapModelPreference,
+  type RecapModelConfig,
+  type ResolvedRecapModelAuth,
 } from "./models.js"
 import { sanitizeRecapText } from "./sanitize.js"
 import {
@@ -78,7 +80,7 @@ Bad: Feasible; I’d default to / and skip config. Extension commands win first;
 interface RecapState {
   sessionActive: boolean
   runId: number
-  selectedModel: RecapModelPreference | undefined
+  modelConfig: RecapModelConfig
   lastRecap: string
   visible: boolean
   stale: boolean
@@ -91,7 +93,7 @@ function createRecapState(): RecapState {
   return {
     sessionActive: false,
     runId: 0,
-    selectedModel: undefined,
+    modelConfig: { kind: "missing" },
     lastRecap: "",
     visible: false,
     stale: false,
@@ -243,17 +245,15 @@ async function generateRecap(
   }
 
   const runId = state.runId
-  const auth = await getFastModelAuth(ctx, state.selectedModel)
+  const modelAuth = await getRecapModelAuth(ctx, state.modelConfig)
   if (runId !== state.runId || !state.sessionActive) return
 
-  if (!auth) {
-    if (options.manual) {
-      notifyUser(ctx, "No recap model authenticated.", "error")
-    } else {
-      showNoModelWarning(ctx)
-    }
+  if (modelAuth.status !== "ok") {
+    handleMissingRecapModel(ctx, modelAuth, options)
     return
   }
+
+  const auth = modelAuth.auth
 
   const abortController = new AbortController()
   abortPendingGeneration(state)
@@ -307,6 +307,37 @@ async function generateRecap(
   }
 }
 
+function handleMissingRecapModel(
+  ctx: ExtensionContext,
+  modelAuth: Exclude<ResolvedRecapModelAuth, { status: "ok" }>,
+  options: { manual: boolean },
+): void {
+  if (!options.manual) {
+    showNoModelWarning(ctx)
+    return
+  }
+
+  if (modelAuth.status === "invalid-config") {
+    notifyUser(ctx, "Invalid recap model config. Run /recap config.", "error")
+    return
+  }
+
+  if (modelAuth.source === "configured" && modelAuth.model) {
+    notifyUser(
+      ctx,
+      `Recap model is not authenticated: ${formatRecapModelKey(modelAuth.model)}. Run /recap config.`,
+      "error",
+    )
+    return
+  }
+
+  notifyUser(
+    ctx,
+    "No default recap model authenticated. Run /recap config.",
+    "error",
+  )
+}
+
 function scheduleAwayRecap(
   pi: ExtensionAPI,
   ctx: ExtensionContext,
@@ -333,59 +364,36 @@ function getRecapArgumentCompletions(
   return items.length > 0 ? items : null
 }
 
-async function promptForCustomModel(
-  ctx: ExtensionContext,
-): Promise<RecapModelPreference | undefined> {
-  const value = await ctx.ui.input("Custom recap model", "provider/model-id")
-  if (value === undefined) return undefined
-
-  const modelPreference = parseModelSpec(value)
-  if (!modelPreference) {
-    notifyUser(ctx, "Use provider/model-id for custom recap models.", "error")
-    return undefined
-  }
-
-  const model = ctx.modelRegistry.find(
-    modelPreference.provider,
-    modelPreference.id,
-  )
-  if (!model) {
-    notifyUser(
-      ctx,
-      `Unknown model: ${formatRecapModelKey(modelPreference)}`,
-      "error",
-    )
-    return undefined
-  }
-
-  return modelPreference
-}
-
 async function configureRecapModel(
   ctx: ExtensionContext,
   state: RecapState,
 ): Promise<void> {
-  const customOption = "custom..."
-  const options = [
-    "auto",
-    ...FAST_MODEL_CANDIDATES.map(formatRecapModelKey),
-    customOption,
-  ]
-  const selected = await ctx.ui.select("Recap model", options)
-  if (selected === undefined) return
-
-  const modelPreference =
-    selected === customOption
-      ? await promptForCustomModel(ctx)
-      : parseModelSpec(selected)
-  if (selected === customOption && modelPreference === undefined) return
-
-  try {
-    saveModelPreference(modelPreference)
-    state.selectedModel = modelPreference
+  const models = await getAuthenticatedTextModelPreferences(ctx)
+  if (models.length === 0) {
     notifyUser(
       ctx,
-      `Recap model set to ${formatModelPreference(modelPreference)}.`,
+      "No authenticated models available. Run /login or configure a model first.",
+      "error",
+    )
+    return
+  }
+
+  const result = await pickRecapModel(ctx, models)
+  if (result.action === "cancel") return
+
+  try {
+    if (result.action === "default") {
+      deleteRecapConfig()
+      state.modelConfig = { kind: "missing" }
+      notifyUser(ctx, "Recap model reset to default.", "info")
+      return
+    }
+
+    saveModelPreference(result.model)
+    state.modelConfig = { kind: "configured", model: result.model }
+    notifyUser(
+      ctx,
+      `Recap model set to ${formatRecapModelKey(result.model)}.`,
       "info",
     )
   } catch (error) {
@@ -443,15 +451,18 @@ async function notifyRecapStatus(
   ctx: ExtensionContext,
   state: RecapState,
 ): Promise<void> {
-  const configuredModel = state.selectedModel
-  const selectedModelLine = `selected model: ${formatModelPreference(configuredModel)}`
+  let selectedModelLine = `selected model: ${formatModelPreference(state.modelConfig)}`
   let activeModelLine: string
 
   try {
-    const auth = await getFastModelAuth(ctx, configuredModel)
-    if (auth) {
+    const modelAuth = await getRecapModelAuth(ctx, state.modelConfig)
+    if (modelAuth.status === "ok") {
       clearNoModelWarning(ctx)
-      activeModelLine = `active model: ${formatAuthModelKey(auth)}`
+      const suffix = modelAuth.source === "default" ? " (default)" : ""
+      selectedModelLine = `selected model: ${formatAuthModelKey(modelAuth.auth)}${suffix}`
+      activeModelLine = `active model: ${formatAuthModelKey(modelAuth.auth)}`
+    } else if (modelAuth.status === "invalid-config") {
+      activeModelLine = "active model: none (invalid config)"
     } else {
       activeModelLine = "active model: none"
     }
@@ -486,7 +497,7 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_start", (_event, ctx) => {
     state.sessionActive = true
-    state.selectedModel = resolveInitialModelPreference()
+    state.modelConfig = resolveInitialModelConfig()
     resetRecapSession(ctx, state)
     restoreRecapState(ctx, state)
 
