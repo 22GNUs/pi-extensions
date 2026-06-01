@@ -25,7 +25,6 @@ A good recap should answer "what was I trying to do here?". For example:
 
 > Deciding whether pi-inline-skills should switch from `$skill` to `/skill`. Recommendation is `/` only with commands winning; next decide whether leading `/skill` should expand.
 
-
 ## Commands
 
 - `/recap`: Generate and show a fresh recap.
