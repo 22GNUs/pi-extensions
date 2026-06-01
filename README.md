@@ -7,7 +7,6 @@ A collection of [Pi coding agent](https://pi.dev) extensions.
 | package                                                          | description                                                        |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [`@tifan/pi-copy-response`](packages/pi-copy-response)           | Pick, preview, and copy an assistant response.                     |
-| [`@tifan/pi-friction`](packages/pi-friction)                     | Log workflow friction to `.pi/FRICTION.md`.                        |
 | [`@tifan/pi-handoff`](packages/pi-handoff)                       | Transfer session context to a new session and query past sessions. |
 | [`@tifan/pi-inline-skills`](packages/pi-inline-skills)           | Inline `$skill` autocomplete in the pi editor.                     |
 | [`@tifan/pi-mermaid-open`](packages/pi-mermaid-open)             | Extract and open Mermaid diagrams from agent responses.            |
