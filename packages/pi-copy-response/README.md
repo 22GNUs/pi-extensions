@@ -2,7 +2,7 @@
 
 Pick one assistant response from the current pi session, preview it, then copy it to the system clipboard.
 
-![Picker](images/picker.png)
+![Picker](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-copy-response/assets/picker.webp?raw=1)
 
 Use this when pi's built-in `/copy` is not enough. `/copy` copies only the last assistant response. This extension lets you choose an older response and preview the full text before copying it.
 
