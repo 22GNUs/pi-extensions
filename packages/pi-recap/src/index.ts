@@ -4,6 +4,7 @@ import type { AutocompleteItem } from "@earendil-works/pi-tui"
 import type {
   ExtensionAPI,
   ExtensionContext,
+  SessionEntry,
 } from "@earendil-works/pi-coding-agent"
 import {
   buildSessionContext,
@@ -45,6 +46,19 @@ interface PersistedRecapState {
 
 interface SessionContextReader {
   buildSessionContext(): { messages: AgentMessage[] }
+}
+
+function isRecapStateEntry(entry: SessionEntry): boolean {
+  return entry.type === "custom" && entry.customType === RECAP_ENTRY_TYPE
+}
+
+function getRecapContextLeafId(ctx: ExtensionContext): string | null {
+  const contextEntry = ctx.sessionManager
+    .getBranch()
+    .toReversed()
+    .find((entry) => !isRecapStateEntry(entry))
+
+  return contextEntry?.id ?? null
 }
 
 const RECAP_SUBCOMMANDS: AutocompleteItem[] = [
@@ -171,7 +185,7 @@ function restoreRecapState(ctx: ExtensionContext, state: RecapState): void {
   state.lastRecap = latestEntry.data.lastRecap
   state.lastRecapCurrent =
     latestEntry.id === ctx.sessionManager.getLeafId() &&
-    latestEntry.parentId === latestEntry.data.contextLeafId
+    latestEntry.data.contextLeafId === getRecapContextLeafId(ctx)
 }
 
 function showRestoredRecap(ctx: ExtensionContext, state: RecapState): boolean {
@@ -184,13 +198,13 @@ function showRestoredRecap(ctx: ExtensionContext, state: RecapState): boolean {
 
 function persistRecapState(
   pi: ExtensionAPI,
-  ctx: ExtensionContext,
   state: RecapState,
+  contextLeafId: string | null,
 ): void {
   pi.appendEntry<PersistedRecapState>(RECAP_ENTRY_TYPE, {
     version: 2,
     lastRecap: state.lastRecap,
-    contextLeafId: ctx.sessionManager.getLeafId(),
+    contextLeafId,
   })
 }
 
@@ -205,15 +219,19 @@ function hasSessionContextReader(
   )
 }
 
-function getCurrentSessionMessages(ctx: ExtensionContext): AgentMessage[] {
-  if (hasSessionContextReader(ctx.sessionManager)) {
+function getCurrentSessionMessages(
+  ctx: ExtensionContext,
+  contextLeafId: string | null,
+): AgentMessage[] {
+  if (
+    contextLeafId === ctx.sessionManager.getLeafId() &&
+    hasSessionContextReader(ctx.sessionManager)
+  ) {
     return ctx.sessionManager.buildSessionContext().messages
   }
 
-  return buildSessionContext(
-    ctx.sessionManager.getEntries(),
-    ctx.sessionManager.getLeafId(),
-  ).messages
+  return buildSessionContext(ctx.sessionManager.getEntries(), contextLeafId)
+    .messages
 }
 
 function buildPrompt(messages: AgentMessage[]): Message {
@@ -238,7 +256,8 @@ async function generateRecap(
 ): Promise<void> {
   if (!ctx.hasUI) return
 
-  const messages = getCurrentSessionMessages(ctx)
+  const contextLeafId = getRecapContextLeafId(ctx)
+  const messages = getCurrentSessionMessages(ctx, contextLeafId)
   if (messages.length === 0) {
     if (options.manual) notifyUser(ctx, "No conversation to recap yet.", "info")
     return
@@ -293,7 +312,7 @@ async function generateRecap(
     state.lastRecap = recap
     state.visible = true
     state.stale = false
-    persistRecapState(pi, ctx, state)
+    persistRecapState(pi, state, contextLeafId)
     state.lastRecapCurrent = true
     clearNoModelWarning(ctx)
     showWidget(ctx, recap)

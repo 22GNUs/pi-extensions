@@ -50,6 +50,10 @@ You can also edit `~/.config/pi/extensions/pi-recap.json` manually:
 }
 ```
 
+## Release notes
+
+See [CHANGELOG.md](CHANGELOG.md)
+
 ## License
 
 [MIT](LICENSE)
