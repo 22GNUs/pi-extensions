@@ -12,14 +12,14 @@
   "homepage": "https://github.com/tifandotme/pi-extensions/tree/master/packages/pi-handoff#readme",
   "bugs": "https://github.com/tifandotme/pi-extensions/issues",
   "license": "MIT",
-  "author": "Tifan Avianto <tifan@hadl.ai>",
+  "author": "Tifan Dwi Avianto <hi@tifan.me>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tifandotme/pi-extensions.git",
     "directory": "packages/pi-handoff"
   },
   "files": [
-    "*.ts",
+    "src/**/*.ts",
     "README.md",
     "LICENSE"
   ],
@@ -33,8 +33,8 @@
   },
   "pi": {
     "extensions": [
-      "./handoff.ts",
-      "./session-query.ts"
+      "./src/index.ts",
+      "./src/session-query.ts"
     ]
   }
 }

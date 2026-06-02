@@ -82,7 +82,9 @@ function getHandoffMessages(branch: SessionEntry[]): AgentMessage[] {
     .filter((message) => message !== undefined)
 }
 
-function findHandoffSkill(pi: ExtensionAPI): HandoffSkill | undefined {
+async function loadHandoffSkill(
+  pi: ExtensionAPI,
+): Promise<HandoffSkill | undefined> {
   const command = pi
     .getCommands()
     .find(
@@ -94,26 +96,14 @@ function findHandoffSkill(pi: ExtensionAPI): HandoffSkill | undefined {
 
   return {
     path: command.sourceInfo.path,
-    instructions: "",
-  }
-}
-
-async function loadHandoffSkill(
-  pi: ExtensionAPI,
-): Promise<HandoffSkill | undefined> {
-  const skill = findHandoffSkill(pi)
-  if (!skill) return undefined
-
-  return {
-    ...skill,
-    instructions: await readFile(skill.path, "utf8"),
+    instructions: await readFile(command.sourceInfo.path, "utf8"),
   }
 }
 
 function textFromMessage(message: AgentMessage): string | undefined {
   if (message.role !== "user") return undefined
   const content = message.content
-  if (typeof content === "string") return content
+  if (typeof content === "string") return content.trim()
   if (!Array.isArray(content)) return undefined
 
   return content
@@ -202,7 +192,7 @@ function buildDocumentWithMetadata(options: {
     "",
     "## Handoff policy",
     "",
-    `- Skill: \`handoff\``,
+    "- Skill: `handoff`",
     `- Source: \`${options.handoffSkillPath}\``,
     "",
     options.generated.trim(),
@@ -319,10 +309,14 @@ export default function (pi: ExtensionAPI): void {
       const parentSession = ctx.sessionManager.getSessionFile() ?? undefined
       const generated = await ctx.ui.custom<string | null>(
         (tui, theme, _kb, done) => {
+          const model = ctx.model
+          const modelLabel = model
+            ? `${model.provider}/${"id" in model ? model.id : "selected"}`
+            : "selected model"
           const loader = new BorderedLoader(
             tui,
             theme,
-            `Generating handoff with ${ctx.model?.provider}/${ctx.model?.id}...`,
+            `Generating handoff with ${modelLabel}...`,
           )
           loader.onAbort = () => done(null)
 
