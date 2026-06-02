@@ -28,13 +28,21 @@
       "name": "@tifan/pi-copy-response",
       "version": "0.2.5",
     },
+    "packages/pi-fixed-editor": {
+      "name": "@tifan/pi-fixed-editor",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "@earendil-works/pi-coding-agent": ">=0.78.0",
+        "@earendil-works/pi-tui": ">=0.78.0",
+      },
+    },
     "packages/pi-handoff": {
       "name": "@tifan/pi-handoff",
       "version": "0.1.1",
     },
     "packages/pi-inline-skills": {
       "name": "@tifan/pi-inline-skills",
-      "version": "1.0.0",
+      "version": "1.0.1",
     },
     "packages/pi-mermaid-open": {
       "name": "@tifan/pi-mermaid-open",
@@ -313,6 +321,8 @@
     "@tifan/pi-autoname": ["@tifan/pi-autoname@workspace:packages/pi-autoname"],
 
     "@tifan/pi-copy-response": ["@tifan/pi-copy-response@workspace:packages/pi-copy-response"],
+
+    "@tifan/pi-fixed-editor": ["@tifan/pi-fixed-editor@workspace:packages/pi-fixed-editor"],
 
     "@tifan/pi-handoff": ["@tifan/pi-handoff@workspace:packages/pi-handoff"],
 
