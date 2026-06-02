@@ -20,10 +20,6 @@
         "typescript": "6.0.3",
       },
     },
-    "packages/pi-autoname": {
-      "name": "@tifan/pi-autoname",
-      "version": "0.1.0",
-    },
     "packages/pi-copy-response": {
       "name": "@tifan/pi-copy-response",
       "version": "0.2.5",
@@ -317,8 +313,6 @@
     "@smithy/util-buffer-from": ["@smithy/util-buffer-from@2.2.0", "", { "dependencies": { "@smithy/is-array-buffer": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-IJdWBbTcMQ6DA0gdNhh/BwrLkDR+ADW5Kr1aZmd4k3DIF6ezMV4R2NIAmT08wQJ3yUK82thHWmC/TnK/wpMMIA=="],
 
     "@smithy/util-utf8": ["@smithy/util-utf8@2.3.0", "", { "dependencies": { "@smithy/util-buffer-from": "^2.2.0", "tslib": "^2.6.2" } }, "sha512-R8Rdn8Hy72KKcebgLiv8jQcQkXoLMOGGv5uI1/k0l+snqkOzQ1R0ChUBCxWMlBsFMekWjq0wRudIweFs7sKT5A=="],
-
-    "@tifan/pi-autoname": ["@tifan/pi-autoname@workspace:packages/pi-autoname"],
 
     "@tifan/pi-copy-response": ["@tifan/pi-copy-response@workspace:packages/pi-copy-response"],
 
