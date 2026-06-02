@@ -1,0 +1,46 @@
+{
+  "name": "@tifan/pi-fixed-editor",
+  "version": "0.1.0",
+  "description": "Keep the pi editor and footer fixed while the transcript scrolls.",
+  "keywords": [
+    "fixed-editor",
+    "pi",
+    "pi-extension",
+    "pi-package",
+    "terminal"
+  ],
+  "homepage": "https://github.com/tifandotme/pi-extensions/tree/master/packages/pi-fixed-editor#readme",
+  "bugs": "https://github.com/tifandotme/pi-extensions/issues",
+  "license": "MIT",
+  "author": "Tifan Dwi Avianto <hi@tifan.me>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tifandotme/pi-extensions.git",
+    "directory": "packages/pi-fixed-editor"
+  },
+  "files": [
+    "src/**/*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.78.0",
+    "@earendil-works/pi-tui": ">=0.78.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
