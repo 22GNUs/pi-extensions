@@ -19,6 +19,8 @@ Each package has:
 - `LICENSE` symlinked to the root `LICENSE`.
 - `README.md` with install snippet, tools/commands list, and a `Credits` section if the package is a fork.
 
+Keep the root `README.md` package table in sync whenever a package is added, removed, renamed, or its package README or description changes.
+
 ## Writing extensions
 
 Extensions are TypeScript loaded by pi via [jiti](https://github.com/unjs/jiti). No build step. The entry point exports a default function receiving `ExtensionAPI`.
