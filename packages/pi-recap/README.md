@@ -29,18 +29,18 @@ A good recap should answer "what was I trying to do here?". For example:
 
 - `/recap`: Generate and show a fresh recap.
 - `/recap status`: Show the selected model, active model, recap freshness, and whether the recap is visible. A recap is current when it still matches the latest session state; otherwise it is stale.
-- `/recap config`: Choose an authenticated recap model.
+- `/recap config`: Choose a recap model.
 - `/recap help`: List recap commands.
 
 ## Configuration
 
-Out of the box, `pi-recap` uses this default model when it is authenticated: `openai-codex/gpt-5.4-mini`.
+Out of the box, `pi-recap` uses this default model: `openai-codex/gpt-5.4-mini`.
 
-Run `/recap config` to choose a different authenticated model. The picker shows models available in pi that already have usable auth, and it includes search.
+Run `/recap config` to choose a different model.
 
 ![Recap model selector showing available model choices](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-recap/assets/recap-model-selector.webp)
 
-After you choose a model, `pi-recap` uses only that model. If it is no longer authenticated, recap generation shows an error. Choose `Use default` in `/recap config` return to the default.
+After you choose a model, `pi-recap` uses only that model. Choose `Use default` in `/recap config` to return to the default.
 
 You can also edit `~/.config/pi/extensions/pi-recap.json` manually:
 

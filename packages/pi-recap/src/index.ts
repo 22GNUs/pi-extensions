@@ -29,6 +29,7 @@ import {
   clearNoModelWarning,
   clearWidget,
   notifyUser,
+  showLoadingWidget,
   showNoModelWarning,
   showWidget,
 } from "./tui.js"
@@ -263,11 +264,14 @@ async function generateRecap(
     return
   }
 
+  if (options.manual) showLoadingWidget(ctx)
+
   const runId = state.runId
   const modelAuth = await getRecapModelAuth(ctx, state.modelConfig)
   if (runId !== state.runId || !state.sessionActive) return
 
   if (modelAuth.status !== "ok") {
+    if (options.manual) clearWidget(ctx)
     handleMissingRecapModel(ctx, modelAuth, options)
     return
   }
@@ -298,14 +302,19 @@ async function generateRecap(
 
     if (runId !== state.runId || !state.sessionActive) return
     if (response.stopReason !== "stop") {
-      if (options.manual) notifyUser(ctx, "Recap generation failed.", "error")
+      if (options.manual) {
+        clearWidget(ctx)
+        notifyUser(ctx, "Recap generation failed.", "error")
+      }
       return
     }
 
     const recap = sanitizeRecapText(extractTextContent(response.content))
     if (!recap) {
-      if (options.manual)
+      if (options.manual) {
+        clearWidget(ctx)
         notifyUser(ctx, "Recap generation returned empty text.", "error")
+      }
       return
     }
 
@@ -317,7 +326,10 @@ async function generateRecap(
     clearNoModelWarning(ctx)
     showWidget(ctx, recap)
   } catch {
-    if (options.manual) notifyUser(ctx, "Recap generation failed.", "error")
+    if (options.manual) {
+      clearWidget(ctx)
+      notifyUser(ctx, "Recap generation failed.", "error")
+    }
     // Automatic recaps are best-effort. Keep the previous recap on transient failures.
   } finally {
     if (state.abortController === abortController) {

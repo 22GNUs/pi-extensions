@@ -1,5 +1,5 @@
 import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent"
-import type { Component } from "@earendil-works/pi-tui"
+import type { Component, TUI } from "@earendil-works/pi-tui"
 import {
   truncateToWidth,
   visibleWidth,
@@ -10,8 +10,12 @@ import { sanitizeRecapText } from "./sanitize.js"
 const WIDGET_KEY = "pi-recap"
 const MODEL_WARNING_WIDGET_KEY = "pi-recap-model-warning"
 const NO_RECAP_MODEL_AUTH_MESSAGE = "no recap model authenticated"
-const TITLE = " recap "
-const MIN_BOX_WIDTH = 12
+const ICON = "※ "
+const LABEL = `${ICON}recap: `
+const LOADING_TEXT = "generating..."
+const LOADING_FRAMES = ["⡿", "⣟", "⣯", "⣷", "⣾", "⣽", "⣻", "⢿"] as const
+const LOADING_INTERVAL_MS = 70
+const MIN_RECAP_WIDTH = 12
 
 class WarningLine implements Component {
   private readonly theme: Theme
@@ -29,7 +33,41 @@ class WarningLine implements Component {
   }
 }
 
-class PiRecapBox implements Component {
+class LoadingRecapLine implements Component {
+  private readonly tui: TUI
+  private readonly theme: Theme
+  private readonly timer: ReturnType<typeof setInterval>
+  private frameIndex = 0
+
+  constructor(tui: TUI, theme: Theme) {
+    this.tui = tui
+    this.theme = theme
+    this.timer = setInterval(() => {
+      this.frameIndex++
+      this.tui.requestRender()
+    }, LOADING_INTERVAL_MS)
+  }
+
+  dispose(): void {
+    clearInterval(this.timer)
+  }
+
+  invalidate(): void {}
+
+  render(width: number): string[] {
+    const frame =
+      LOADING_FRAMES[this.frameIndex % LOADING_FRAMES.length] ??
+      LOADING_FRAMES[0]
+    return [
+      truncateToWidth(
+        this.theme.fg("dim", `${LABEL}${frame} ${LOADING_TEXT}`),
+        width,
+      ),
+    ]
+  }
+}
+
+class PiRecapLine implements Component {
   private readonly theme: Theme
   private readonly recap: string
 
@@ -41,44 +79,29 @@ class PiRecapBox implements Component {
   invalidate(): void {}
 
   render(width: number): string[] {
-    if (width < MIN_BOX_WIDTH) {
-      return [truncateToWidth(`${TITLE.trim()}: ${this.recap}`, width)]
+    const labelWidth = visibleWidth(LABEL)
+    const label = this.renderLabel()
+
+    if (width < MIN_RECAP_WIDTH || width <= labelWidth) {
+      return [
+        truncateToWidth(this.theme.fg("muted", `${LABEL}${this.recap}`), width),
+      ]
     }
 
-    const contentWidth = width - 4
-    const lines = wrapTextWithAnsi(this.recap, contentWidth)
-    const contentLines = lines.length === 0 ? [""] : lines
-    return [
-      this.topBorder(width),
-      ...this.contentLines(contentLines, contentWidth),
-      this.bottomBorder(width),
-    ]
+    const contentWidth = width - labelWidth
+    const wrappedLines = wrapTextWithAnsi(this.recap, contentWidth)
+    const contentLines = wrappedLines.length === 0 ? [""] : wrappedLines
+
+    const continuationIndent = " ".repeat(visibleWidth(ICON))
+
+    return contentLines.map((line, index) => {
+      const prefix = index === 0 ? label : continuationIndent
+      return truncateToWidth(this.theme.fg("muted", `${prefix}${line}`), width)
+    })
   }
 
-  private topBorder(width: number): string {
-    const rightWidth = Math.max(1, width - visibleWidth(TITLE) - 2)
-    return this.theme.fg("borderMuted", `╭${TITLE}${"─".repeat(rightWidth)}╮`)
-  }
-
-  private bottomBorder(width: number): string {
-    return this.theme.fg("borderMuted", `╰${"─".repeat(width - 2)}╯`)
-  }
-
-  private contentLines(
-    lines: readonly string[],
-    contentWidth: number,
-  ): string[] {
-    return lines.map((line) => this.contentLine(line, contentWidth))
-  }
-
-  private contentLine(line: string, contentWidth: number): string {
-    const padding = " ".repeat(Math.max(0, contentWidth - visibleWidth(line)))
-    return [
-      this.theme.fg("borderMuted", "│ "),
-      this.theme.fg("text", line),
-      padding,
-      this.theme.fg("borderMuted", " │"),
-    ].join("")
+  private renderLabel(): string {
+    return `※ ${this.theme.bold("recap:")} `
   }
 }
 
@@ -101,6 +124,12 @@ export function showNoModelWarning(ctx: ExtensionContext): void {
   )
 }
 
+export function showLoadingWidget(ctx: ExtensionContext): void {
+  if (!ctx.hasUI) return
+
+  ctx.ui.setWidget(WIDGET_KEY, (tui, theme) => new LoadingRecapLine(tui, theme))
+}
+
 export function showWidget(ctx: ExtensionContext, recap: string): void {
   if (!ctx.hasUI) return
 
@@ -112,7 +141,7 @@ export function showWidget(ctx: ExtensionContext, recap: string): void {
 
   ctx.ui.setWidget(
     WIDGET_KEY,
-    (_tui, theme) => new PiRecapBox(theme, safeRecap),
+    (_tui, theme) => new PiRecapLine(theme, safeRecap),
   )
 }
 
