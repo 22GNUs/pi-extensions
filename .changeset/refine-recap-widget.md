@@ -2,4 +2,4 @@
 "@tifan/pi-recap": patch
 ---
 
-Refine the recap widget into an inline status line and show progress while manual recap generation runs.
+Refine the recap widget to look more like Claude Code's and show progress while manual recap generation runs.
