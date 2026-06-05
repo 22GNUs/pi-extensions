@@ -164,6 +164,11 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand("copy-response", {
     description: "Pick an assistant response and copy it",
     handler: async (_args, ctx) => {
+      if (ctx.mode !== "tui") {
+        ctx.ui.notify("copy-response requires interactive TUI mode.", "error")
+        return
+      }
+
       await ctx.waitForIdle()
 
       const messages = ctx.sessionManager

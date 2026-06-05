@@ -158,14 +158,14 @@ function teardown(options?: { resetExtendedKeyboardModes?: boolean }): void {
 }
 
 function warnUnsupported(ctx: ExtensionContext): void {
-  if (didWarnUnsupported || !ctx.hasUI) return
+  if (didWarnUnsupported || ctx.mode !== "tui") return
   didWarnUnsupported = true
   ctx.ui.notify(WARNING_MESSAGE, "warning")
 }
 
 function install(ctx: ExtensionContext, tui: TuiLike): void {
   if (isInstalled || compositor) return
-  if (!ctx.hasUI) return
+  if (ctx.mode !== "tui") return
 
   const terminal = tui.terminal
   if (!terminal || typeof terminal.write !== "function") {
@@ -238,7 +238,7 @@ function install(ctx: ExtensionContext, tui: TuiLike): void {
 export default function fixedEditor(pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => {
     didWarnUnsupported = false
-    if (!ctx.hasUI) return
+    if (ctx.mode !== "tui") return
 
     ctx.ui.setWidget(
       WIDGET_KEY,
@@ -251,7 +251,7 @@ export default function fixedEditor(pi: ExtensionAPI) {
   })
 
   pi.on("session_shutdown", (_event, ctx) => {
-    if (ctx.hasUI) {
+    if (ctx.mode === "tui") {
       ctx.ui.setWidget(WIDGET_KEY, undefined)
     }
     teardown({ resetExtendedKeyboardModes: true })

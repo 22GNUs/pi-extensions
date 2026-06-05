@@ -297,7 +297,7 @@ export default function (pi: ExtensionAPI): void {
       }
 
       let selected = diagrams[0]
-      if (diagrams.length > 1) {
+      if (ctx.mode === "tui" && diagrams.length > 1) {
         const labels = diagrams.map(pickerLabel)
         const choice = await ctx.ui.select("Open Mermaid diagram:", labels)
         if (!choice) return
@@ -326,7 +326,7 @@ export default function (pi: ExtensionAPI): void {
         return
       }
 
-      if (!ctx.hasUI) {
+      if (ctx.mode !== "tui") {
         ctx.ui.notify(`Rendered Mermaid SVG: ${svgPath}`, "info")
         return
       }
