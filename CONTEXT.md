@@ -6,9 +6,9 @@
 
 The single concrete model pi-recap uses to generate session recaps after the user configures one. Before config exists, pi-recap uses its default recap model when that model is authenticated.
 
-### Autoname
+### Session rename
 
-A pi extension behavior that chooses a short task name for the current session and applies the same name to both the pi session display name and the current Herdr tab.
+A pi extension behavior that generates a short task name from bounded user-message context and applies the same name to both the pi session display name and the current Herdr tab.
 
 ### Handoff
 
