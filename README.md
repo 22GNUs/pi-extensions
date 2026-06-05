@@ -6,7 +6,7 @@ A collection of [pi coding agent](https://pi.dev) extensions.
 
 | Package                                                          | Description                                                           |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [`@tifan/pi-autoname`](packages/pi-autoname)                     | Auto-name pi sessions and the current Herdr tab.                      |
+| [`@tifan/pi-rename`](packages/pi-rename)                         | Generate session names and rename the current Herdr tab.              |
 | [`@tifan/pi-copy-response`](packages/pi-copy-response)           | Pick and copy an assistant response from the current pi session.      |
 | [`@tifan/pi-fixed-editor`](packages/pi-fixed-editor)             | Keep the pi editor and footer fixed while the transcript scrolls.     |
 | [`@tifan/pi-handoff`](packages/pi-handoff)                       | Transfer pi session context to a new session and query past sessions. |
