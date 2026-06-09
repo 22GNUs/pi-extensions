@@ -18,6 +18,8 @@ pi install /absolute/path/to/pi-extensions/packages/pi-rename
 
 Run `/rename` to generate a fresh hyphen-separated session name. The extension applies the name to the pi session and, when pi is running inside Herdr, to the current Herdr tab.
 
+When a named session starts or resumes in Herdr, the extension also applies the saved pi session name to the current tab if the tab still has its default Herdr label.
+
 `/rename` builds naming context from the first user message plus up to three latest user messages. It ignores assistant replies, tool output, and attachments. Before sending context to the rename model, it redacts common secrets.
 
 If the rename model is unavailable, `/rename` falls back to a local name from the latest user message.
@@ -50,6 +52,10 @@ You can also edit `~/.config/pi/extensions/pi-rename.json` manually:
 ## Herdr behavior
 
 The extension uses `HERDR_PANE_ID` to find the current Herdr pane, then renames that pane's tab.
+
+On session startup or resume, it only auto-renames tabs that still have the default Herdr label, such as the tab number. It does not overwrite custom Herdr tab labels.
+
+On quit, if the Herdr tab still matches the saved pi session name, the extension resets the tab label to its tab number. Custom Herdr tab labels are preserved.
 
 If pi is not running inside Herdr, only the pi session name is updated.
 

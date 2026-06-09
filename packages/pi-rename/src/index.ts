@@ -78,12 +78,36 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>
 }
 
+interface HerdrTabInfo {
+  readonly id: string
+  readonly label?: string
+  readonly number?: number
+}
+
 function extractTabId(stdout: string): string | undefined {
   const parsed = asRecord(JSON.parse(stdout) as unknown)
   const result = asRecord(parsed?.["result"])
   const pane = asRecord(result?.["pane"])
   const tabId = pane?.["tab_id"]
   return typeof tabId === "string" && tabId.trim() ? tabId : undefined
+}
+
+function extractTabInfo(stdout: string): HerdrTabInfo | undefined {
+  const parsed = asRecord(JSON.parse(stdout) as unknown)
+  const result = asRecord(parsed?.["result"])
+  const tab = asRecord(result?.["tab"])
+  const tabId = tab?.["tab_id"]
+
+  if (typeof tabId !== "string" || !tabId.trim()) return undefined
+
+  const label = tab?.["label"]
+  const number = tab?.["number"]
+
+  return {
+    id: tabId,
+    ...(typeof label === "string" ? { label } : {}),
+    ...(typeof number === "number" ? { number } : {}),
+  }
 }
 
 async function getCurrentHerdrTabId(): Promise<string | undefined> {
@@ -94,11 +118,46 @@ async function getCurrentHerdrTabId(): Promise<string | undefined> {
   return extractTabId(stdout)
 }
 
+async function getCurrentHerdrTabInfo(): Promise<HerdrTabInfo | undefined> {
+  const tabId = await getCurrentHerdrTabId()
+  if (!tabId) return undefined
+
+  const { stdout } = await execFileAsync("herdr", ["tab", "get", tabId])
+  return extractTabInfo(stdout)
+}
+
+function isDefaultHerdrTabLabel(tab: HerdrTabInfo): boolean {
+  const label = tab.label?.trim()
+  if (!label) return true
+
+  return typeof tab.number === "number" && label === String(tab.number)
+}
+
 async function renameCurrentHerdrTab(name: string): Promise<boolean> {
   const tabId = await getCurrentHerdrTabId()
   if (!tabId) return false
 
   await execFileAsync("herdr", ["tab", "rename", tabId, name])
+  return true
+}
+
+async function renameCurrentHerdrTabIfDefault(name: string): Promise<boolean> {
+  const tab = await getCurrentHerdrTabInfo()
+  if (!tab || tab.label?.trim() === name || !isDefaultHerdrTabLabel(tab)) {
+    return false
+  }
+
+  await execFileAsync("herdr", ["tab", "rename", tab.id, name])
+  return true
+}
+
+async function resetCurrentHerdrTabIfNamed(name: string): Promise<boolean> {
+  const tab = await getCurrentHerdrTabInfo()
+  if (!tab || tab.label?.trim() !== name || tab.number === undefined) {
+    return false
+  }
+
+  await execFileAsync("herdr", ["tab", "rename", tab.id, String(tab.number)])
   return true
 }
 
@@ -471,7 +530,29 @@ export default function (pi: ExtensionAPI): void {
 
   registerRenameCommand(pi, state)
 
-  pi.on("session_start", () => {
+  pi.on("session_start", async () => {
     state.modelConfig = resolveInitialModelConfig()
+
+    const sessionName = pi.getSessionName()?.trim()
+    if (!sessionName) return
+
+    try {
+      await renameCurrentHerdrTabIfDefault(sessionName)
+    } catch {
+      // Keep session startup quiet if Herdr is unavailable or rejects the rename.
+    }
+  })
+
+  pi.on("session_shutdown", async (event) => {
+    if (event.reason !== "quit") return
+
+    const sessionName = pi.getSessionName()?.trim()
+    if (!sessionName) return
+
+    try {
+      await resetCurrentHerdrTabIfNamed(sessionName)
+    } catch {
+      // Keep session shutdown quiet if Herdr is unavailable or rejects the rename.
+    }
   })
 }
