@@ -202,6 +202,13 @@ export function emergencyTerminalModeReset(): string {
   )
 }
 
+function isRootSubmitInput(data: string): boolean {
+  return (
+    !isKeyRelease(data) &&
+    (matchesKey(data, "enter") || matchesKey(data, "return"))
+  )
+}
+
 function parseKeyboardScrollDelta(data: string): number {
   if (isKeyRelease(data)) return 0
 
@@ -327,6 +334,10 @@ function readRows(
 ): number {
   if (descriptor?.get) {
     const value = descriptor.get.call(terminal)
+    return typeof value === "number" && Number.isFinite(value) ? value : 24
+  }
+  if (descriptor && "value" in descriptor) {
+    const value = descriptor.value
     return typeof value === "number" && Number.isFinite(value) ? value : 24
   }
 
@@ -733,6 +744,11 @@ export class TerminalSplitCompositor {
         this.handleMousePacket(packet)
       }
       return { consume: true }
+    }
+
+    if (isRootSubmitInput(data)) {
+      this.jumpToRootBottom()
+      return undefined
     }
 
     const keyboardDelta = parseKeyboardScrollDelta(data)

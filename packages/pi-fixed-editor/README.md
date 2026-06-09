@@ -14,6 +14,7 @@ pi install npm:@tifan/pi-fixed-editor
 - Keeps `aboveEditor` and `belowEditor` widgets with the editor.
 - Preserves existing editor behavior, footer content, and autocomplete.
 - Routes mouse wheel and PageUp/PageDown scrolling to the transcript.
+- Jumps the transcript back to the bottom when you submit a query with Enter.
 
 ## What it does not do
 
