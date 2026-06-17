@@ -2,19 +2,31 @@
 
 Start a fresh pi session from a handoff document, and query past sessions for context, decisions, or code changes.
 
-`/handoff-session` requires an installed skill named exactly `handoff`. It reads that skill as the handoff policy, asks what the next session is for, generates a markdown handoff in your OS temp directory, then opens a new pi session with a prompt that points to the file. The prompt is left in the editor for review and manual submit.
-
 ## Install
 
 ```bash
 pi install npm:@tifan/pi-handoff
 ```
 
+For local development:
+
+```bash
+pi install /absolute/path/to/pi-extensions/packages/pi-handoff
+```
+
 You also need a `handoff` skill installed and discoverable by pi. For example, install or expose Matt Pocock's `handoff` skill, then run `/reload`.
+
+## How it works
+
+Run `/handoff-session` to generate a handoff document from the current session and start a clean session from it. The command asks what the next session is for, uses the installed `handoff` skill as the document policy, and writes the handoff under the OS temp directory.
+
+The new session name is generated from the current conversation using pi-rename-style rules: lowercase, hyphen-separated, and under 60 characters. Naming uses `openai-codex/gpt-5.4-mini` when available, with a local fallback. The focus answer is used for the handoff document, not for the session name. The prompt is left in the editor for review and manual submit.
+
+The handoff includes the previous session path when available, so the next agent can use `session_query` if the handoff omits a detail.
 
 ## Commands
 
-- `/handoff-session`: Generate a handoff from the current session and start a new session from it.
+- `/handoff-session`: Generate a handoff from the current session and start a renamed session from it.
 
 ## Tools
 
@@ -22,10 +34,10 @@ You also need a `handoff` skill installed and discoverable by pi. For example, i
 
 ## Behavior
 
-- Uses the current selected model.
-- Uses the installed `handoff` skill as the document policy.
+- Uses the current selected model to generate the handoff document.
+- Uses `openai-codex/gpt-5.4-mini` to name the new pi session when available.
+- Requires a discoverable skill named exactly `handoff`.
 - Writes stable, readable files under the OS temp directory, such as `/tmp/pi-handoffs/pi-handoff-2026-06-01-inline-skills.md`.
-- Includes the previous session path when available, so the next agent can use `session_query` if the handoff omits a detail.
 - Starts a clean session with native parent-session linking.
 - Does not autosend.
 

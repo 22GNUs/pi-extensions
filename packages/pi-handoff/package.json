@@ -28,6 +28,9 @@
     "access": "public",
     "provenance": true
   },
+  "dependencies": {
+    "@tifan/pi-rename": "^0.3.0"
+  },
   "engines": {
     "node": ">=20"
   },

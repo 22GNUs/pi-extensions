@@ -1,5 +1,10 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core"
 import { complete, type Message } from "@earendil-works/pi-ai"
+import {
+  generateRename,
+  getUserMessageContext,
+  sanitizeRenameText,
+} from "@tifan/pi-rename/naming"
 import type {
   ExtensionAPI,
   ExtensionCommandContext,
@@ -17,7 +22,6 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 const HANDOFF_SKILL_COMMAND = "skill:handoff"
-const HANDOFF_SESSION_TAG = "[handoff-session]"
 
 const HANDOFF_SYSTEM_PROMPT = `You are a context transfer assistant. Generate a handoff markdown document for a fresh coding agent.
 
@@ -122,15 +126,6 @@ function textFromMessage(message: AgentMessage): string | undefined {
     .trim()
 }
 
-function slugify(value: string): string {
-  const slug = value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60)
-  return slug || "session"
-}
-
 function dateStamp(): string {
   const [date] = new Date().toISOString().split("T")
   return date ?? "handoff"
@@ -150,8 +145,15 @@ async function nextHandoffPath(slug: string): Promise<string> {
   throw new Error("Could not allocate a unique handoff file path")
 }
 
-function buildSessionName(focus: string): string {
-  return `${HANDOFF_SESSION_TAG} ${focus.replace(/\s+/g, " ").trim()}`
+async function generateSessionName(
+  ctx: ExtensionCommandContext,
+  messages: readonly AgentMessage[],
+): Promise<string> {
+  const context = getUserMessageContext(messages)
+  if (!context) return "handoff-session"
+
+  const result = await generateRename(ctx, { kind: "missing" }, context)
+  return result?.name ?? "handoff-session"
 }
 
 function buildNewSessionPrompt(handoffPath: string): string {
@@ -375,9 +377,15 @@ export default function (pi: ExtensionAPI): void {
         return
       }
 
+      const sessionName = await generateSessionName(
+        ctx as ExtensionCommandContext,
+        messages,
+      )
       const firstUserText = messages.map(textFromMessage).find(Boolean)
-      const slug = slugify(pi.getSessionName() ?? firstUserText ?? focus)
-      const handoffPath = await nextHandoffPath(slug)
+      const handoffSlug =
+        sanitizeRenameText(pi.getSessionName() ?? firstUserText ?? focus) ||
+        "session"
+      const handoffPath = await nextHandoffPath(handoffSlug)
       const document = buildDocumentWithMetadata({
         generated,
         focus,
@@ -390,7 +398,7 @@ export default function (pi: ExtensionAPI): void {
       await (ctx as ExtensionCommandContext).newSession({
         ...(parentSession ? { parentSession } : {}),
         setup: async (sessionManager) => {
-          sessionManager.appendSessionInfo(buildSessionName(focus))
+          sessionManager.appendSessionInfo(sessionName)
         },
         withSession: async (newCtx) => {
           newCtx.ui.setEditorText(buildNewSessionPrompt(handoffPath))
