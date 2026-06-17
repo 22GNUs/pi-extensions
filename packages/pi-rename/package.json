@@ -26,6 +26,9 @@
     "LICENSE"
   ],
   "type": "module",
+  "exports": {
+    "./naming": "./src/naming.ts"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

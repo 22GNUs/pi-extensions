@@ -1,7 +1,6 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 import type { AgentMessage } from "@earendil-works/pi-agent-core"
-import { complete, type Message } from "@earendil-works/pi-ai"
 import type { AutocompleteItem } from "@earendil-works/pi-tui"
 import type {
   ExtensionAPI,
@@ -20,31 +19,15 @@ import {
   saveModelPreference,
   type RenameModelConfig,
 } from "./models.js"
-import { redactSecrets, sanitizeRenameText } from "./sanitize.js"
+import { generateRename, getUserMessageContext } from "./naming.js"
 
 const execFileAsync = promisify(execFile)
-const RENAME_MAX_TOKENS = 80
-const RENAME_REQUEST_TIMEOUT_MS = 30_000
-
-const RENAME_SYSTEM_PROMPT = `Name this coding-agent session.
-
-Return one lowercase hyphen-separated session name only.
-Use plain text, no quotes, no markdown, no trailing punctuation.
-Prefer an action-oriented task name like fix-auth-callback or design-pi-rename.
-Stay under 60 characters.`
-
 interface SessionContextReader {
   buildSessionContext(): { messages: AgentMessage[] }
 }
 
 interface RenameState {
   modelConfig: RenameModelConfig
-}
-
-interface UserMessageContext {
-  readonly first: string
-  readonly recent: string[]
-  readonly count: number
 }
 
 const RENAME_SUBCOMMANDS: AutocompleteItem[] = [
@@ -183,163 +166,6 @@ function getCurrentSessionMessages(ctx: ExtensionContext): AgentMessage[] {
   ).messages
 }
 
-function extractTextContent(
-  content:
-    | string
-    | readonly { readonly type: string; readonly text?: string }[],
-): string {
-  if (typeof content === "string") return content
-
-  return content
-    .filter(
-      (item): item is { readonly type: string; readonly text: string } =>
-        item.type === "text" && typeof item.text === "string",
-    )
-    .map((item) => item.text)
-    .join("\n")
-}
-
-function hasTextContent(message: AgentMessage): message is AgentMessage & {
-  content: string | readonly { readonly type: string; readonly text?: string }[]
-} {
-  return "content" in message
-}
-
-function getUserMessageContext(
-  messages: readonly AgentMessage[],
-): UserMessageContext | undefined {
-  const userMessages: { index: number; text: string }[] = []
-
-  for (const [index, message] of messages.entries()) {
-    if (message.role !== "user" || !hasTextContent(message)) continue
-
-    const text = redactSecrets(extractTextContent(message.content)).trim()
-    if (text) userMessages.push({ index, text })
-  }
-
-  const firstMessage = userMessages[0]
-  if (!firstMessage) return undefined
-
-  const recentMessages = userMessages
-    .slice(-3)
-    .filter((message) => message.index !== firstMessage.index)
-
-  return {
-    first: firstMessage.text,
-    recent: recentMessages.map((message) => message.text),
-    count: 1 + recentMessages.length,
-  }
-}
-
-function buildRenamePrompt(context: UserMessageContext): Message {
-  const recent = context.recent.length
-    ? context.recent
-        .map((message, index) => `${index + 1}. ${message}`)
-        .join("\n")
-    : "none"
-
-  return {
-    role: "user",
-    content: [
-      {
-        type: "text",
-        text: `## Naming context\n\nFirst user message:\n${context.first}\n\nRecent user messages:\n${recent}`,
-      },
-    ],
-    timestamp: Date.now(),
-  }
-}
-
-function extractModelText(
-  content:
-    | string
-    | readonly { readonly type: string; readonly text?: string }[],
-): string {
-  return extractTextContent(content)
-}
-
-function fallbackName(context: UserMessageContext): string | undefined {
-  const latest = context.recent.at(-1) ?? context.first
-  return sanitizeRenameText(latest)
-}
-
-async function generateRename(
-  ctx: ExtensionContext,
-  state: RenameState,
-  context: UserMessageContext,
-): Promise<
-  | { readonly source: "model"; readonly name: string }
-  | {
-      readonly source: "fallback"
-      readonly name: string
-      readonly reason: string
-    }
-  | undefined
-> {
-  try {
-    const modelAuth = await getRenameModelAuth(ctx, state.modelConfig)
-
-    if (modelAuth.status === "ok") {
-      const response = await complete(
-        modelAuth.auth.model,
-        {
-          systemPrompt: RENAME_SYSTEM_PROMPT,
-          messages: [buildRenamePrompt(context)],
-        },
-        {
-          apiKey: modelAuth.auth.apiKey,
-          ...(modelAuth.auth.headers
-            ? { headers: modelAuth.auth.headers }
-            : {}),
-          maxTokens: RENAME_MAX_TOKENS,
-          maxRetries: 0,
-          cacheRetention: "none",
-          timeoutMs: RENAME_REQUEST_TIMEOUT_MS,
-        },
-      )
-
-      if (response.stopReason === "stop") {
-        const name = sanitizeRenameText(extractModelText(response.content))
-        if (name) return { source: "model", name }
-      }
-
-      const name = fallbackName(context)
-      return name
-        ? {
-            source: "fallback",
-            name,
-            reason: `rename model stopped with ${response.stopReason}`,
-          }
-        : undefined
-    }
-
-    const name = fallbackName(context)
-    if (!name) return undefined
-
-    if (modelAuth.status === "invalid-config") {
-      return {
-        source: "fallback",
-        name,
-        reason: "invalid rename model config",
-      }
-    }
-
-    const modelName = modelAuth.model
-      ? formatRenameModelKey(modelAuth.model)
-      : "unknown"
-    return {
-      source: "fallback",
-      name,
-      reason: `rename model is not authenticated: ${modelName}`,
-    }
-  } catch (error) {
-    const name = fallbackName(context)
-    if (!name) return undefined
-    const reason = error instanceof Error ? error.message : String(error)
-    return { source: "fallback", name, reason }
-  }
-}
-
 async function applyRename(pi: ExtensionAPI, name: string): Promise<boolean> {
   pi.setSessionName(name)
   return renameCurrentHerdrTab(name)
@@ -356,7 +182,7 @@ async function runRenameCommand(
     return
   }
 
-  const result = await generateRename(ctx, state, context)
+  const result = await generateRename(ctx, state.modelConfig, context)
   if (!result) {
     ctx.ui.notify("Could not generate a session name.", "error")
     return
