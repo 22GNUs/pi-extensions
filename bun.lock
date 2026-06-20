@@ -22,11 +22,11 @@
     },
     "packages/pi-copy-response": {
       "name": "@tifan/pi-copy-response",
-      "version": "0.2.5",
+      "version": "0.2.6",
     },
     "packages/pi-fixed-editor": {
       "name": "@tifan/pi-fixed-editor",
-      "version": "0.2.0",
+      "version": "0.2.2",
       "peerDependencies": {
         "@earendil-works/pi-coding-agent": ">=0.78.0",
         "@earendil-works/pi-tui": ">=0.78.0",
@@ -34,15 +34,18 @@
     },
     "packages/pi-handoff": {
       "name": "@tifan/pi-handoff",
-      "version": "1.0.0",
+      "version": "1.0.1",
+      "dependencies": {
+        "@tifan/pi-rename": "^0.3.0",
+      },
     },
     "packages/pi-inline-skills": {
       "name": "@tifan/pi-inline-skills",
-      "version": "1.0.2",
+      "version": "1.0.3",
     },
     "packages/pi-mermaid-open": {
       "name": "@tifan/pi-mermaid-open",
-      "version": "0.1.1",
+      "version": "0.1.2",
     },
     "packages/pi-preferred-thinking": {
       "name": "@tifan/pi-preferred-thinking",
@@ -54,7 +57,7 @@
     },
     "packages/pi-rename": {
       "name": "@tifan/pi-rename",
-      "version": "0.1.0",
+      "version": "0.3.0",
     },
     "packages/pi-titlebar-spinner": {
       "name": "@tifan/pi-titlebar-spinner",
