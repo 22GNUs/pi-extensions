@@ -1076,7 +1076,6 @@ export class TerminalSplitCompositor {
     this.lastLeftPress = null
     this.scrollOffset = nextOffset
     this.repaintScrollableViewport(width)
-    this.requestRender()
   }
 
   private requestRender(): void {

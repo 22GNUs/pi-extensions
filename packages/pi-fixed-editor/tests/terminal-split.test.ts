@@ -78,7 +78,7 @@ test("plain enter scrolls the transcript back to the bottom", () => {
     assert.equal(inputListener("\r"), undefined)
 
     assert.deepEqual(tui.render(), ["line 6", "line 7", "line 8", "line 9"])
-    assert.equal(renderRequests, 2)
+    assert.equal(renderRequests, 1)
   } finally {
     compositor.dispose({ resetExtendedKeyboardModes: true })
   }
