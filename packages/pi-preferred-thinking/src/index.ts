@@ -26,6 +26,7 @@ const VALID_THINKING_LEVELS = new Set<ThinkingLevel>([
   "medium",
   "high",
   "xhigh",
+  "max",
 ])
 const THINKING_LEVEL_OPTIONS: readonly ThinkingLevel[] = [
   "off",
@@ -34,6 +35,7 @@ const THINKING_LEVEL_OPTIONS: readonly ThinkingLevel[] = [
   "medium",
   "high",
   "xhigh",
+  "max",
 ]
 
 function getModelKey(provider: string, modelId: string): string {

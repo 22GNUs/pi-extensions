@@ -2,7 +2,7 @@
 
 Show a braille spinner in the pi titlebar while the agent runs.
 
-The spinner starts on `agent_start` and stops on `agent_end` or `session_shutdown`. When it stops, the extension restores the default `π - [session - ]cwd` title.
+The spinner starts on `agent_start` and stops when the agent settles or the session shuts down. When it stops, the extension restores the default `π - [session - ]cwd` title.
 
 [add image: titlebar spinner while agent runs]
 

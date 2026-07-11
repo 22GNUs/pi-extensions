@@ -1,5 +1,5 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core"
-import { complete, type Message } from "@earendil-works/pi-ai"
+import { complete, type Message } from "@earendil-works/pi-ai/compat"
 import type { AutocompleteItem } from "@earendil-works/pi-tui"
 import type {
   ExtensionAPI,
@@ -561,7 +561,7 @@ export default function (pi: ExtensionAPI): void {
     clearNoModelWarning(ctx)
   })
 
-  pi.on("agent_end", (_event, ctx) => {
+  pi.on("agent_settled", (_event, ctx) => {
     state.stale = true
     scheduleAwayRecap(pi, ctx, state)
   })

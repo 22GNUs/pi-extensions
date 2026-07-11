@@ -15,7 +15,7 @@ pi install npm:@tifan/pi-recap
 ## How it works
 
 - `/recap` generates a fresh, goal-first recap and shows it above the editor.
-- After each agent response, `pi-recap` waits 5 minutes. If you stay idle, it generates one automatic recap.
+- After the agent settles, `pi-recap` waits 5 minutes. If you stay idle, it generates one automatic recap.
 - On resume, `pi-recap` shows the saved recap if it is current. If it is stale or missing, it generates a fresh recap.
 - The recap clears when you send a non-`/recap` message.
 

@@ -16,7 +16,7 @@ pi install npm:@tifan/pi-preferred-thinking
 
 Run `/preferred-thinking` to set or unset the preferred thinking level for the current model.
 
-Valid levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`.
+Valid levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`.
 
 The extension saves preferences in `~/.config/pi/extensions/pi-preferred-thinking.json`:
 
