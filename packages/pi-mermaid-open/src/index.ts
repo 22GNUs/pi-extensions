@@ -212,14 +212,13 @@ async function renderMermaidToSvg(
 }> {
   return new Promise((resolve) => {
     const command = os.platform() === "win32" ? "bunx.cmd" : "bunx"
-    const child = spawn(command, [
-      "-y",
-      "@mermaid-js/mermaid-cli",
-      "-i",
-      "-",
-      "-o",
-      svgPath,
-    ])
+    const child = spawn(
+      command,
+      ["-y", "@mermaid-js/mermaid-cli", "-i", "-", "-o", svgPath],
+      {
+        env: { ...process.env, PUPPETEER_CHROME_SKIP_DOWNLOAD: "true" },
+      },
+    )
 
     let stdout = ""
     let stderr = ""
