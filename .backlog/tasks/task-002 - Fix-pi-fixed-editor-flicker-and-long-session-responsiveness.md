@@ -29,4 +29,5 @@ Address remaining pi-fixed-editor UX issues from the original TASK-001 scope: fi
 - [ ] #2 Rendering work is reduced for long sessions so editor responsiveness is closer to a fresh session
 - [ ] #3 Changes preserve fixed editor/footer behavior and transcript scrolling behavior
 - [ ] #4 Targeted tests or measurable checks cover repaint stability and long-session rendering work
+
 <!-- AC:END -->

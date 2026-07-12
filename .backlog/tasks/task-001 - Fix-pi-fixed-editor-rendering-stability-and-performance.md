@@ -32,6 +32,7 @@ Show a right-side scrollbar in the scrollable transcript area while the fixed ed
 - [x] #4 Mouse wheel, PageUp/PageDown, Enter-to-bottom, target jumps, and selection repaint keep the scrollbar in sync
 - [x] #5 Scrollbar uses a dim track and normal thumb, and is excluded from text selection/copy
 - [x] #6 Fixed editor/footer rendering remains unchanged and does not include the scrollbar
+
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -43,6 +44,7 @@ Show a right-side scrollbar in the scrollable transcript area while the fixed ed
 3. Decorate transcript viewport rows with a dim track and normal thumb without changing fixed editor/footer paint.
 4. Keep scrollbar synchronized across mouse wheel, PageUp/PageDown, Enter-to-bottom, target jumps, and selection repaint.
 5. Add targeted terminal-split tests for visibility, geometry movement, selection exclusion, and fixed cluster isolation.
+
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -72,4 +74,5 @@ Tests:
 - bun run typecheck
 - bun run lint
 - node --experimental-strip-types --test packages/pi-fixed-editor/tests/terminal-split.test.ts
+
 <!-- SECTION:FINAL_SUMMARY:END -->

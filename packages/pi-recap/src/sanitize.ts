@@ -81,7 +81,7 @@ export function sanitizeRecapText(
 ): string {
   let stripped = ""
 
-  for (let index = 0; index < text.length; ) {
+  for (let index = 0; index < text.length;) {
     const code = text.charCodeAt(index)
 
     if (code === ESC) {
