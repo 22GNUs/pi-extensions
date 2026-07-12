@@ -34,7 +34,7 @@
     },
     "packages/pi-handoff": {
       "name": "@tifan/pi-handoff",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dependencies": {
         "@tifan/pi-rename": "^0.3.0",
       },
@@ -45,32 +45,23 @@
     },
     "packages/pi-mermaid-open": {
       "name": "@tifan/pi-mermaid-open",
-      "version": "0.1.2",
+      "version": "0.1.3",
     },
     "packages/pi-preferred-thinking": {
       "name": "@tifan/pi-preferred-thinking",
-      "version": "0.2.4",
+      "version": "0.3.0",
     },
     "packages/pi-recap": {
       "name": "@tifan/pi-recap",
-      "version": "0.4.2",
+      "version": "0.4.3",
     },
     "packages/pi-rename": {
       "name": "@tifan/pi-rename",
-      "version": "0.4.0",
-    },
-    "packages/pi-review": {
-      "name": "@tifan/pi-review",
-      "version": "0.1.0",
-      "peerDependencies": {
-        "@earendil-works/pi-ai": "*",
-        "@earendil-works/pi-coding-agent": "*",
-        "@earendil-works/pi-tui": "*",
-      },
+      "version": "0.4.1",
     },
     "packages/pi-titlebar-spinner": {
       "name": "@tifan/pi-titlebar-spinner",
-      "version": "0.1.2",
+      "version": "0.1.3",
     },
   },
   "packages": {
@@ -349,8 +340,6 @@
     "@tifan/pi-recap": ["@tifan/pi-recap@workspace:packages/pi-recap"],
 
     "@tifan/pi-rename": ["@tifan/pi-rename@workspace:packages/pi-rename"],
-
-    "@tifan/pi-review": ["@tifan/pi-review@workspace:packages/pi-review"],
 
     "@tifan/pi-titlebar-spinner": ["@tifan/pi-titlebar-spinner@workspace:packages/pi-titlebar-spinner"],
 
