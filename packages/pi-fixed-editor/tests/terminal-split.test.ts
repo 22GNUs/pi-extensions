@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { type Component, type Terminal, TUI } from "@earendil-works/pi-tui"
 import {
   buildFixedClusterPaint,
   emergencyTerminalModeReset,
@@ -34,6 +35,76 @@ test("emergency reset restores terminal modes", () => {
   assert.ok(output.includes("\x1b[r"))
   assert.ok(output.includes("\x1b[?1006l"))
   assert.ok(output.includes("\x1b[?1049l"))
+})
+
+test("scrolls synchronously and deletes Kitty images that leave the viewport", () => {
+  const writes: string[] = []
+  let scheduledRenders = 0
+  const terminal: Terminal = {
+    columns: 80,
+    rows: 6,
+    kittyProtocolActive: false,
+    start: () => {},
+    stop: () => {},
+    drainInput: async () => {},
+    write: (data) => writes.push(data),
+    moveBy: () => {},
+    hideCursor: () => {},
+    showCursor: () => {},
+    clearLine: () => {},
+    clearFromCursor: () => {},
+    clearScreen: () => {},
+    setTitle: () => {},
+    setProgress: () => {},
+  }
+  const imageId = 42
+  const image = `\x1b_Ga=T,f=100,q=2,C=1,c=10,r=2,i=${imageId};AAAA\x1b\\`
+  const rootLines = [
+    image,
+    "",
+    "line 2",
+    "line 3",
+    "line 4",
+    "line 5",
+    "line 6",
+    "line 7",
+  ]
+  const root: Component = {
+    render: () => rootLines,
+    invalidate: () => {},
+  }
+  const tui = new TUI(terminal)
+  tui.addChild(root)
+  const compositor = new TerminalSplitCompositor({
+    tui,
+    terminal,
+    renderCluster: () => ({ lines: ["editor", "footer"], cursor: null }),
+  })
+  const handleInput = Reflect.get(tui, "handleInput")
+  assert.equal(typeof handleInput, "function")
+
+  compositor.install()
+  try {
+    Reflect.get(tui, "doRender").call(tui)
+    tui.requestRender = () => {
+      scheduledRenders += 1
+    }
+    writes.length = 0
+
+    handleInput.call(tui, "\x1b[5~")
+    assert.notEqual(writes.length, 0)
+    assert.equal(scheduledRenders, 0)
+    writes.length = 0
+
+    handleInput.call(tui, "\x1b[6~")
+
+    assert.match(
+      writes.join(""),
+      new RegExp(`\\x1b_Ga=d,d=I,i=${imageId},q=2\\x1b\\\\`),
+    )
+  } finally {
+    compositor.dispose({ resetExtendedKeyboardModes: true })
+  }
 })
 
 test("plain enter scrolls the transcript back to the bottom", () => {
@@ -74,6 +145,7 @@ test("plain enter scrolls the transcript back to the bottom", () => {
     assert.ok(inputListener)
     assert.equal(inputListener("\x1b[5~")?.consume, true)
     assert.deepEqual(tui.render(), ["line 0", "line 1", "line 2", "line 3"])
+    renderRequests = 0
 
     assert.equal(inputListener("\r"), undefined)
 
