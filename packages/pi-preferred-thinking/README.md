@@ -23,8 +23,8 @@ The extension saves preferences in `~/.config/pi/extensions/pi-preferred-thinkin
 ```json
 {
   "preferredThinking": {
-    "anthropic/claude-opus-4-7": "high",
-    "openai-codex/gpt-5.4-mini": "minimal"
+    "anthropic/claude-opus-4-8": "high",
+    "openai-codex/gpt-5.6-luna": "minimal"
   }
 }
 ```
