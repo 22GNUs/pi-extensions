@@ -11,7 +11,7 @@ import { Type } from "typebox"
 
 const QUERY_MODEL = {
   provider: "openai-codex",
-  modelId: "gpt-5.4-mini",
+  modelId: "gpt-5.6-luna",
 } as const
 
 const QUERY_SYSTEM_PROMPT = `You are a session context assistant. Given a pi coding session and a question, answer based only on that session.
