@@ -46,7 +46,7 @@ export type ResolvedRecapModelAuth =
 
 export const DEFAULT_RECAP_MODEL: RecapModelPreference = {
   provider: "openai-codex",
-  id: "gpt-5.4-mini",
+  id: "gpt-5.6-luna",
 }
 
 interface RecapConfig extends Record<string, unknown> {
