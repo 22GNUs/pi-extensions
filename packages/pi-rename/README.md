@@ -35,7 +35,7 @@ Manual names are not supported. Use pi's built-in `/name` command when you want 
 
 ## Configuration
 
-Out of the box, `pi-rename` uses this default model: `openai-codex/gpt-5.4-mini`.
+Out of the box, `pi-rename` uses this default model: `openai-codex/gpt-5.6-luna`.
 
 Run `/rename config` to choose a different model.
 
@@ -45,7 +45,7 @@ You can also edit `~/.config/pi/extensions/pi-rename.json` manually:
 
 ```json
 {
-  "model": "openai-codex/gpt-5.4-mini"
+  "model": "openai-codex/gpt-5.6-luna"
 }
 ```
 
@@ -55,7 +55,7 @@ The extension uses `HERDR_PANE_ID` to find the current Herdr pane, then renames 
 
 On session startup or resume, it only auto-renames tabs that still have the default Herdr label, such as the tab number. It does not overwrite custom Herdr tab labels.
 
-On quit, if the Herdr tab still matches the saved pi session name, the extension resets the tab label to its tab number. Custom Herdr tab labels are preserved.
+On quit, the Herdr tab keeps the last session name.
 
 If pi is not running inside Herdr, only the pi session name is updated.
 

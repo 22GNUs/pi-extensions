@@ -46,7 +46,7 @@ export type ResolvedRenameModelAuth =
 
 export const DEFAULT_RENAME_MODEL: RenameModelPreference = {
   provider: "openai-codex",
-  id: "gpt-5.4-mini",
+  id: "gpt-5.6-luna",
 }
 
 interface RenameConfig extends Record<string, unknown> {

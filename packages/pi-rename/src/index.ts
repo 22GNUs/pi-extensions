@@ -134,16 +134,6 @@ async function renameCurrentHerdrTabIfDefault(name: string): Promise<boolean> {
   return true
 }
 
-async function resetCurrentHerdrTabIfNamed(name: string): Promise<boolean> {
-  const tab = await getCurrentHerdrTabInfo()
-  if (!tab || tab.label?.trim() !== name || tab.number === undefined) {
-    return false
-  }
-
-  await execFileAsync("herdr", ["tab", "rename", tab.id, String(tab.number)])
-  return true
-}
-
 function hasSessionContextReader(
   value: unknown,
 ): value is SessionContextReader {
@@ -366,19 +356,6 @@ export default function (pi: ExtensionAPI): void {
       await renameCurrentHerdrTabIfDefault(sessionName)
     } catch {
       // Keep session startup quiet if Herdr is unavailable or rejects the rename.
-    }
-  })
-
-  pi.on("session_shutdown", async (event) => {
-    if (event.reason !== "quit") return
-
-    const sessionName = pi.getSessionName()?.trim()
-    if (!sessionName) return
-
-    try {
-      await resetCurrentHerdrTabIfNamed(sessionName)
-    } catch {
-      // Keep session shutdown quiet if Herdr is unavailable or rejects the rename.
     }
   })
 }
