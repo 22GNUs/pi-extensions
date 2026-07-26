@@ -1,0 +1,39 @@
+{
+  "name": "@tifan/pi-stash",
+  "version": "0.1.0",
+  "description": "Stash one pi draft and restore it after the next message.",
+  "keywords": [
+    "pi",
+    "pi-extension",
+    "pi-package",
+    "prompt",
+    "stash"
+  ],
+  "homepage": "https://github.com/tifandotme/pi-extensions/tree/master/packages/pi-stash#readme",
+  "bugs": "https://github.com/tifandotme/pi-extensions/issues",
+  "license": "MIT",
+  "author": "Tifan Dwi Avianto <hi@tifan.me>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tifandotme/pi-extensions.git",
+    "directory": "packages/pi-stash"
+  },
+  "files": [
+    "src/**/*.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
