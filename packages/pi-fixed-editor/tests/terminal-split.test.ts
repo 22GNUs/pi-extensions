@@ -37,7 +37,7 @@ test("emergency reset restores terminal modes", () => {
   assert.ok(output.includes("\x1b[?1049l"))
 })
 
-test("scrolls synchronously and deletes Kitty images that leave the viewport", () => {
+test("deletes Kitty images when rendering after scrolling", () => {
   const writes: string[] = []
   let scheduledRenders = 0
   const terminal: Terminal = {
@@ -85,23 +85,82 @@ test("scrolls synchronously and deletes Kitty images that leave the viewport", (
 
   compositor.install()
   try {
+    assert.ok(writes.join("").includes("\x1b[?1049h"))
+    writes.length = 0
     Reflect.get(tui, "doRender").call(tui)
+    assert.equal(writes.filter((write) => write.includes("footer")).length, 1)
     tui.requestRender = () => {
       scheduledRenders += 1
     }
     writes.length = 0
 
     handleInput.call(tui, "\x1b[5~")
-    assert.notEqual(writes.length, 0)
-    assert.equal(scheduledRenders, 0)
+    assert.equal(writes.length, 0)
+    assert.equal(scheduledRenders, 1)
+    Reflect.get(tui, "doRender").call(tui)
     writes.length = 0
 
     handleInput.call(tui, "\x1b[6~")
+    Reflect.get(tui, "doRender").call(tui)
 
     assert.match(
       writes.join(""),
       new RegExp(`\\x1b_Ga=d,d=I,i=${imageId},q=2\\x1b\\\\`),
     )
+  } finally {
+    compositor.dispose({ resetExtendedKeyboardModes: true })
+  }
+})
+
+test("rapid scrolling defers full transcript rendering", () => {
+  let inputListener:
+    | ((data: string) => { consume?: boolean } | undefined)
+    | null = null
+  let synchronousRenders = 0
+  let renderRequests = 0
+  const rootLines = Array.from({ length: 1000 }, (_, index) => `line ${index}`)
+  const terminal: TerminalLike = {
+    columns: 80,
+    rows: 24,
+    write: () => {},
+  }
+  const tui = {
+    children: [],
+    render: () => rootLines,
+    doRender: () => {
+      synchronousRenders += 1
+      tui.render()
+    },
+    requestRender: () => {
+      renderRequests += 1
+    },
+    addInputListener: (
+      listener: (data: string) => { consume?: boolean } | undefined,
+    ) => {
+      inputListener = listener
+      return () => {
+        inputListener = null
+      }
+    },
+    hasOverlay: () => false,
+  }
+  const compositor = new TerminalSplitCompositor({
+    tui,
+    terminal,
+    renderCluster: () => ({ lines: ["editor", "footer"], cursor: null }),
+  })
+
+  compositor.install()
+  try {
+    tui.render()
+    assert.ok(inputListener)
+
+    for (let index = 0; index < 100; index++) {
+      inputListener("\x1b[<64;1;1M")
+    }
+
+    assert.equal(synchronousRenders, 0)
+    assert.ok(renderRequests > 0)
   } finally {
     compositor.dispose({ resetExtendedKeyboardModes: true })
   }

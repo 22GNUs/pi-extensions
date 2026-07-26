@@ -414,6 +414,7 @@ export class TerminalSplitCompositor {
   private disposed = false
   private writing = false
   private renderPassActive = false
+  private renderPassPaintedCluster = false
   private renderPassCluster: RenderPassCluster | null = null
   private renderingCluster = false
   private renderingScrollableRoot = false
@@ -498,10 +499,11 @@ export class TerminalSplitCompositor {
     if (this.originalDoRender) {
       this.tui.doRender = () => {
         this.renderPassActive = true
+        this.renderPassPaintedCluster = false
         this.renderPassCluster = null
         try {
           this.originalDoRender?.()
-          this.requestRepaint()
+          if (!this.renderPassPaintedCluster) this.requestRepaint()
         } finally {
           this.renderPassActive = false
           this.renderPassCluster = null
@@ -1063,8 +1065,9 @@ export class TerminalSplitCompositor {
   }
 
   private scrollBy(delta: number): void {
-    const width = Math.max(1, this.terminal.columns || 80)
-    this.refreshRootWindow(width)
+    if (this.lastRootLineCount === 0) {
+      this.refreshRootWindow(Math.max(1, this.terminal.columns || 80))
+    }
 
     const nextOffset = Math.max(
       0,
@@ -1075,11 +1078,7 @@ export class TerminalSplitCompositor {
     this.clearSelection()
     this.lastLeftPress = null
     this.scrollOffset = nextOffset
-    if (typeof this.tui.doRender === "function") {
-      this.tui.doRender()
-    } else {
-      this.requestRender()
-    }
+    this.requestRender()
   }
 
   private requestRender(): void {
@@ -1259,6 +1258,7 @@ export class TerminalSplitCompositor {
         endSynchronizedOutput()
 
       this.originalWrite(buffer)
+      if (this.renderPassActive) this.renderPassPaintedCluster = true
     } finally {
       this.writing = false
     }
