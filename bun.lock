@@ -59,6 +59,10 @@
       "name": "@tifan/pi-rename",
       "version": "0.4.1",
     },
+    "packages/pi-stash": {
+      "name": "@tifan/pi-stash",
+      "version": "0.1.0",
+    },
     "packages/pi-titlebar-spinner": {
       "name": "@tifan/pi-titlebar-spinner",
       "version": "0.1.3",
@@ -340,6 +344,8 @@
     "@tifan/pi-recap": ["@tifan/pi-recap@workspace:packages/pi-recap"],
 
     "@tifan/pi-rename": ["@tifan/pi-rename@workspace:packages/pi-rename"],
+
+    "@tifan/pi-stash": ["@tifan/pi-stash@workspace:packages/pi-stash"],
 
     "@tifan/pi-titlebar-spinner": ["@tifan/pi-titlebar-spinner@workspace:packages/pi-titlebar-spinner"],
 
