@@ -68,7 +68,17 @@ Fix errors before moving on. Keep typecheck before final format because type err
 3. Add the extension entry point at `src/index.ts`.
 4. Set `"name": "@tifan/pi-<name>"` and `"pi": { "extensions": ["./src/index.ts"] }`.
 5. Add `"publishConfig": { "access": "public", "provenance": true }`.
-6. Stop there and tell Tifan. The first publish of a new package is manual.
+6. Stop there and tell Tifan. For the first manual publish, give Tifan these commands:
+   ```bash
+   cd packages/pi-<name>
+   npm publish --provenance=false
+   npm trust github @tifan/pi-<name> \
+     --repository tifandotme/pi-extensions \
+     --file release.yml \
+     --allow-publish \
+     --yes
+   ```
+   Publish before configuring trust because npm requires the package to exist. `--provenance=false` applies only to the local bootstrap publish; later releases use OIDC provenance in GitHub Actions.
 
 ## Conventions
 
