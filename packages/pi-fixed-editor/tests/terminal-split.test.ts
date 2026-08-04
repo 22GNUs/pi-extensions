@@ -1,14 +1,85 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { type Component, type Terminal, TUI } from "@earendil-works/pi-tui"
+import type { FixedEditorClusterRender } from "../src/cluster.ts"
 import {
+  beginSynchronizedOutput,
   buildFixedClusterPaint,
   emergencyTerminalModeReset,
+  endSynchronizedOutput,
   resetScrollRegion,
   setScrollRegion,
   TerminalSplitCompositor,
   type TerminalLike,
 } from "../src/terminal-split.ts"
+
+function countOccurrences(value: string, search: string): number {
+  return value.split(search).length - 1
+}
+
+function synchronizedFrame(body: string): string {
+  return beginSynchronizedOutput() + body + endSynchronizedOutput()
+}
+
+function createCompositorHarness(
+  initialCluster: FixedEditorClusterRender,
+  options: { showHardwareCursor?: boolean } = {},
+) {
+  const writes: string[] = []
+  let cluster = initialCluster
+  let rows = 10
+  let columns = 80
+  let overlayVisible = false
+  const terminal: TerminalLike = {
+    get columns() {
+      return columns
+    },
+    get rows() {
+      return rows
+    },
+    write: (data) => writes.push(data),
+  }
+  const tui = {
+    children: [],
+    cursorRow: 0,
+    hardwareCursorRow: 0,
+    previousViewportTop: 0,
+    hasOverlay: () => overlayVisible,
+  }
+  const compositor = new TerminalSplitCompositor({
+    tui,
+    terminal,
+    getShowHardwareCursor: () => options.showHardwareCursor === true,
+    renderCluster: () => cluster,
+  })
+  compositor.install()
+  writes.length = 0
+
+  return {
+    compositor,
+    terminal,
+    writes,
+    setCluster(next: FixedEditorClusterRender) {
+      cluster = next
+    },
+    setRows(next: number) {
+      rows = next
+    },
+    setColumns(next: number) {
+      columns = next
+    },
+    setOverlayVisible(next: boolean) {
+      overlayVisible = next
+    },
+    takeWrite(): string {
+      assert.equal(writes.length, 1)
+      return writes.splice(0)[0] ?? ""
+    },
+    dispose() {
+      compositor.dispose({ resetExtendedKeyboardModes: true })
+    },
+  }
+}
 
 test("renders terminal scroll region escape sequences", () => {
   assert.equal(setScrollRegion(1, 20), "\x1b[1;20r")
@@ -35,6 +106,290 @@ test("emergency reset restores terminal modes", () => {
   assert.ok(output.includes("\x1b[r"))
   assert.ok(output.includes("\x1b[?1006l"))
   assert.ok(output.includes("\x1b[?1049l"))
+})
+
+test("coalesces nested synchronized output around fixed-cluster paint", () => {
+  const harness = createCompositorHarness({
+    lines: ["editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("transcript"))
+    const wrapped = harness.takeWrite()
+
+    assert.equal(countOccurrences(wrapped, beginSynchronizedOutput()), 1)
+    assert.equal(countOccurrences(wrapped, endSynchronizedOutput()), 1)
+    assert.ok(wrapped.indexOf("transcript") < wrapped.indexOf("editor"))
+    assert.ok(wrapped.indexOf("editor") < wrapped.indexOf("footer"))
+    assert.ok(
+      wrapped.indexOf("footer") < wrapped.indexOf(endSynchronizedOutput()),
+    )
+
+    harness.terminal.write(
+      synchronizedFrame("first frame") + synchronizedFrame("second frame"),
+    )
+    const concatenated = harness.takeWrite()
+    assert.equal(countOccurrences(concatenated, beginSynchronizedOutput()), 1)
+    assert.equal(countOccurrences(concatenated, endSynchronizedOutput()), 1)
+    assert.ok(concatenated.includes("first framesecond frame"))
+
+    for (const part of [
+      beginSynchronizedOutput(),
+      "split frame",
+      endSynchronizedOutput(),
+    ]) {
+      harness.terminal.write(part)
+      const split = harness.takeWrite()
+      assert.equal(countOccurrences(split, beginSynchronizedOutput()), 1)
+      assert.equal(countOccurrences(split, endSynchronizedOutput()), 1)
+    }
+
+    harness.terminal.write("cursor-update")
+    const unwrapped = harness.takeWrite()
+    assert.equal(countOccurrences(unwrapped, beginSynchronizedOutput()), 1)
+    assert.equal(countOccurrences(unwrapped, endSynchronizedOutput()), 1)
+    assert.ok(unwrapped.includes("cursor-update"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("repaints only changed fixed-cluster rows", () => {
+  const harness = createCompositorHarness({
+    lines: ["editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+
+    harness.compositor.requestRepaint()
+    const unchanged = harness.takeWrite()
+    assert.equal(countOccurrences(unchanged, "\x1b[2K"), 0)
+    assert.ok(!unchanged.includes("editor"))
+    assert.ok(!unchanged.includes("footer"))
+    assert.ok(unchanged.includes("\x1b[?25l"))
+
+    harness.setCluster({ lines: ["editor", "updated footer"], cursor: null })
+    harness.compositor.requestRepaint()
+    const changed = harness.takeWrite()
+    assert.equal(countOccurrences(changed, "\x1b[2K"), 1)
+    assert.ok(!changed.includes("editor"))
+    assert.ok(changed.includes("\x1b[10;1H\x1b[2Kupdated footer"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("clears painted rows and hides the cursor when the cluster becomes empty", () => {
+  const harness = createCompositorHarness(
+    { lines: ["editor", "footer"], cursor: { row: 0, col: 4 } },
+    { showHardwareCursor: true },
+  )
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+    harness.setCluster({ lines: [], cursor: null })
+
+    harness.compositor.requestRepaint()
+    const output = harness.takeWrite()
+    assert.equal(countOccurrences(output, "\x1b[2K"), 2)
+    assert.ok(output.includes("\x1b[9;1H\x1b[2K"))
+    assert.ok(output.includes("\x1b[10;1H\x1b[2K"))
+    assert.ok(output.endsWith("\x1b[?2026l"))
+    assert.ok(output.includes("\x1b[?25l"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("clears rows vacated by a shrinking cluster before transcript output", () => {
+  const harness = createCompositorHarness({
+    lines: ["status", "editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+    harness.setCluster({ lines: ["editor", "footer"], cursor: null })
+
+    harness.terminal.write(synchronizedFrame("next transcript"))
+    const output = harness.takeWrite()
+    const clearedRow = "\x1b[8;1H\x1b[2K"
+
+    assert.equal(countOccurrences(output, "\x1b[2K"), 1)
+    assert.ok(output.includes(clearedRow))
+    assert.ok(output.indexOf(clearedRow) < output.indexOf("next transcript"))
+    assert.ok(!output.includes("editor"))
+    assert.ok(!output.includes("footer"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("repaints unchanged fixed rows after display erase", () => {
+  const harness = createCompositorHarness({
+    lines: ["editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+    harness.terminal.write(synchronizedFrame("\x1b[2J\x1b[H\x1b[3J"))
+    const output = harness.takeWrite()
+
+    assert.equal(countOccurrences(output, beginSynchronizedOutput()), 1)
+    assert.equal(countOccurrences(output, endSynchronizedOutput()), 1)
+    assert.equal(countOccurrences(output, "\x1b[2K"), 2)
+    assert.ok(output.includes("editor"))
+    assert.ok(output.includes("footer"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("repaints fixed rows after alternate-screen transitions", () => {
+  const harness = createCompositorHarness({
+    lines: ["editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+
+    for (const transition of ["\x1b[?1049h", "\x1b[?1049l"]) {
+      harness.terminal.write(synchronizedFrame(transition))
+      const output = harness.takeWrite()
+      assert.equal(countOccurrences(output, beginSynchronizedOutput()), 1)
+      assert.equal(countOccurrences(output, endSynchronizedOutput()), 1)
+      assert.equal(countOccurrences(output, "\x1b[2K"), 2)
+      assert.ok(output.includes("editor"))
+      assert.ok(output.includes("footer"))
+    }
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("invalidates fixed-cluster paint state while overlays are visible", () => {
+  const harness = createCompositorHarness({
+    lines: ["editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+    harness.setOverlayVisible(true)
+    harness.terminal.write(synchronizedFrame("overlay"))
+    harness.takeWrite()
+    harness.setOverlayVisible(false)
+
+    harness.compositor.requestRepaint()
+    const output = harness.takeWrite()
+    assert.equal(countOccurrences(output, "\x1b[2K"), 2)
+    assert.ok(output.includes("editor"))
+    assert.ok(output.includes("footer"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("repaints moved fixed rows after terminal resize", () => {
+  const harness = createCompositorHarness({
+    lines: ["editor", "footer"],
+    cursor: null,
+  })
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+    harness.setRows(12)
+
+    harness.compositor.requestRepaint()
+    const output = harness.takeWrite()
+    assert.equal(countOccurrences(output, "\x1b[2K"), 4)
+    assert.ok(output.includes("\x1b[9;1H\x1b[2K"))
+    assert.ok(output.includes("\x1b[10;1H\x1b[2K"))
+    assert.ok(output.includes("\x1b[11;1H\x1b[2Keditor"))
+    assert.ok(output.includes("\x1b[12;1H\x1b[2Kfooter"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("restores a visible hardware cursor without repainting unchanged rows", () => {
+  const harness = createCompositorHarness(
+    { lines: ["editor", "footer"], cursor: { row: 0, col: 4 } },
+    { showHardwareCursor: true },
+  )
+
+  try {
+    harness.terminal.write(synchronizedFrame("initial"))
+    harness.takeWrite()
+
+    harness.compositor.requestRepaint()
+    const output = harness.takeWrite()
+    assert.equal(countOccurrences(output, "\x1b[2K"), 0)
+    assert.ok(output.includes("\x1b[9;5H\x1b[?25h"))
+  } finally {
+    harness.dispose()
+  }
+})
+
+test("paints the fixed cluster once per host render pass", () => {
+  const writes: string[] = []
+  let cluster: FixedEditorClusterRender = {
+    lines: ["editor", "footer"],
+    cursor: null,
+  }
+  let passBody = "first pass"
+  const terminal: TerminalLike = {
+    columns: 80,
+    rows: 10,
+    write: (data) => writes.push(data),
+  }
+  const tui = {
+    children: [],
+    cursorRow: 0,
+    hardwareCursorRow: 0,
+    previousViewportTop: 0,
+    doRender: () => terminal.write(synchronizedFrame(passBody)),
+    hasOverlay: () => false,
+  }
+  const compositor = new TerminalSplitCompositor({
+    tui,
+    terminal,
+    renderCluster: () => cluster,
+  })
+  compositor.install()
+
+  try {
+    writes.length = 0
+    tui.doRender()
+    assert.equal(writes.length, 1)
+    assert.equal(countOccurrences(writes[0] ?? "", "\x1b[2K"), 2)
+
+    writes.length = 0
+    passBody = "second pass"
+    tui.doRender()
+    assert.equal(writes.length, 1)
+    assert.equal(countOccurrences(writes[0] ?? "", "\x1b[2K"), 0)
+
+    writes.length = 0
+    cluster = { lines: ["editor", "updated footer"], cursor: null }
+    tui.doRender()
+    assert.equal(writes.length, 1)
+    assert.equal(countOccurrences(writes[0] ?? "", "\x1b[2K"), 1)
+  } finally {
+    compositor.dispose({ resetExtendedKeyboardModes: true })
+  }
 })
 
 test("deletes Kitty images when rendering after scrolling", () => {
@@ -76,7 +431,7 @@ test("deletes Kitty images when rendering after scrolling", () => {
   const tui = new TUI(terminal)
   tui.addChild(root)
   const compositor = new TerminalSplitCompositor({
-    tui,
+    tui: tui as unknown as { children: Component[] },
     terminal,
     renderCluster: () => ({ lines: ["editor", "footer"], cursor: null }),
   })

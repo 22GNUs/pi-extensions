@@ -93,21 +93,31 @@ interface DisposeOptions {
 
 type ExtendedKeyboardMode = "kitty" | "modifyOtherKeys"
 
-const PAGE_UP_PATTERN = new RegExp(
-  "^\\u001b\\[(?:5;9(?::[12])?~|1;6(?::[12])?A|57421;9(?::[12])?u|57419;6(?::[12])?u)$",
-)
-const PAGE_DOWN_PATTERN = new RegExp(
-  "^\\u001b\\[(?:6;9(?::[12])?~|1;6(?::[12])?B|57422;9(?::[12])?u|57420;6(?::[12])?u)$",
-)
-const SGR_MOUSE_PATTERN = new RegExp(
-  "\\u001b\\[<(\\d+);(\\d+);(\\d+)([Mm])",
-  "g",
-)
-const OSC_PATTERN = new RegExp(
-  "\\u001b\\][^\\u0007]*(?:\\u0007|\\u001b\\\\)",
-  "g",
-)
-const ANSI_PATTERN = new RegExp("\\u001b\\[[0-9;?]*[ -/]*[@-~]", "g")
+interface FixedClusterPaintSnapshot {
+  terminalRows: number
+  width: number
+  startRow: number
+  lines: string[]
+}
+
+interface FixedClusterPaintDelta {
+  clearBefore: string
+  paintAfter: string
+  snapshot: FixedClusterPaintSnapshot | null
+}
+
+const SYNCHRONIZED_OUTPUT_BEGIN = "\x1b[?2026h"
+const SYNCHRONIZED_OUTPUT_END = "\x1b[?2026l"
+const SCREEN_INVALIDATION_PATTERN =
+  /(?:\u001bc|\u001b\[[0-?]*[ -/]*J|\u001b\[\?(?:47|1047|1049)[hl])/
+
+const PAGE_UP_PATTERN =
+  /^\u001b\[(?:5;9(?::[12])?~|1;6(?::[12])?A|57421;9(?::[12])?u|57419;6(?::[12])?u)$/
+const PAGE_DOWN_PATTERN =
+  /^\u001b\[(?:6;9(?::[12])?~|1;6(?::[12])?B|57422;9(?::[12])?u|57420;6(?::[12])?u)$/
+const SGR_MOUSE_PATTERN = /\u001b\[<(\d+);(\d+);(\d+)([Mm])/g
+const OSC_PATTERN = /\u001b\][^\u0007]*(?:\u0007|\u001b\\)/g
+const ANSI_PATTERN = /\u001b\[[0-9;?]*[ -/]*[@-~]/g
 
 const CONTEXT_MENU_MOUSE_REPORTING_PAUSE_MS = 1200
 const CONTEXT_MENU_SELECTION_RESTORE_WINDOW_MS = 5000
@@ -115,11 +125,17 @@ const CONTEXT_MENU_CLIPBOARD_RESTORE_INTERVAL_MS = 100
 const DOUBLE_CLICK_MS = 500
 
 export function beginSynchronizedOutput(): string {
-  return "\x1b[?2026h"
+  return SYNCHRONIZED_OUTPUT_BEGIN
 }
 
 export function endSynchronizedOutput(): string {
-  return "\x1b[?2026l"
+  return SYNCHRONIZED_OUTPUT_END
+}
+
+function stripSynchronizedOutputMarkers(data: string): string {
+  return data
+    .replaceAll(SYNCHRONIZED_OUTPUT_BEGIN, "")
+    .replaceAll(SYNCHRONIZED_OUTPUT_END, "")
 }
 
 export function setScrollRegion(top: number, bottom: number): string {
@@ -351,6 +367,75 @@ function sanitizeLine(line: string, width: number): string {
     : line
 }
 
+function createFixedClusterPaintSnapshot(
+  cluster: FixedEditorClusterRender,
+  terminalRows: number,
+  width: number,
+): FixedClusterPaintSnapshot | null {
+  if (cluster.lines.length === 0) return null
+
+  return {
+    terminalRows,
+    width,
+    startRow: Math.max(1, terminalRows - cluster.lines.length + 1),
+    lines: cluster.lines.map((line) => sanitizeLine(line, width)),
+  }
+}
+
+function fixedClusterRows(
+  snapshot: FixedClusterPaintSnapshot | null,
+): Map<number, string> {
+  const rows = new Map<number, string>()
+  if (!snapshot) return rows
+
+  for (let index = 0; index < snapshot.lines.length; index++) {
+    rows.set(snapshot.startRow + index, snapshot.lines[index] ?? "")
+  }
+  return rows
+}
+
+function buildFixedClusterPaintDelta(
+  previous: FixedClusterPaintSnapshot | null,
+  cluster: FixedEditorClusterRender,
+  terminalRows: number,
+  width: number,
+  showHardwareCursor: boolean,
+  forcePaint = false,
+): FixedClusterPaintDelta {
+  const snapshot = createFixedClusterPaintSnapshot(cluster, terminalRows, width)
+  const previousRows = fixedClusterRows(previous)
+  const currentRows = fixedClusterRows(snapshot)
+  const geometryChanged =
+    previous !== null &&
+    (previous.terminalRows !== terminalRows || previous.width !== width)
+  const repaintAll = forcePaint || previous === null || geometryChanged
+
+  let clearBefore = ""
+  for (const row of previousRows.keys()) {
+    if (row > terminalRows || currentRows.has(row)) continue
+    if (clearBefore.length === 0) clearBefore = resetScrollRegion()
+    clearBefore += moveCursor(row, 1) + clearLine()
+  }
+
+  let paintAfter = resetScrollRegion()
+  for (const [row, line] of currentRows) {
+    if (!repaintAll && previousRows.get(row) === line) continue
+    paintAfter += moveCursor(row, 1) + clearLine() + line
+  }
+
+  if (snapshot && cluster.cursor && showHardwareCursor) {
+    paintAfter += moveCursor(
+      snapshot.startRow + cluster.cursor.row,
+      Math.max(1, cluster.cursor.col + 1),
+    )
+    paintAfter += showCursor()
+  } else if (snapshot || previous) {
+    paintAfter += hideCursor()
+  }
+
+  return { clearBefore, paintAfter, snapshot }
+}
+
 function sanitizeOverlayBaseLine(line: string, width: number): string {
   return sanitizeLine(stripOscSequences(line), width)
 }
@@ -367,26 +452,14 @@ export function buildFixedClusterPaint(
 ): string {
   if (cluster.lines.length === 0) return ""
 
-  const startRow = Math.max(1, terminalRows - cluster.lines.length + 1)
-  let buffer = resetScrollRegion()
-
-  for (let i = 0; i < cluster.lines.length; i++) {
-    buffer += moveCursor(startRow + i, 1)
-    buffer += clearLine()
-    buffer += sanitizeLine(cluster.lines[i] ?? "", width)
-  }
-
-  if (cluster.cursor && showHardwareCursor) {
-    buffer += moveCursor(
-      startRow + cluster.cursor.row,
-      Math.max(1, cluster.cursor.col + 1),
-    )
-    buffer += showCursor()
-  } else {
-    buffer += hideCursor()
-  }
-
-  return buffer
+  return buildFixedClusterPaintDelta(
+    null,
+    cluster,
+    terminalRows,
+    width,
+    showHardwareCursor,
+    true,
+  ).paintAfter
 }
 
 export class TerminalSplitCompositor {
@@ -416,6 +489,7 @@ export class TerminalSplitCompositor {
   private renderPassActive = false
   private renderPassPaintedCluster = false
   private renderPassCluster: RenderPassCluster | null = null
+  private paintedFixedCluster: FixedClusterPaintSnapshot | null = null
   private renderingCluster = false
   private renderingScrollableRoot = false
   private checkingOverlay = false
@@ -605,22 +679,26 @@ export class TerminalSplitCompositor {
     if (this.disposed || this.hasVisibleOverlay()) return
     const rawRows = this.getRawRows()
     const width = Math.max(1, this.terminal.columns || 80)
-    const cluster = this.getCluster(width, rawRows)
-    if (cluster.lines.length === 0) return
+    const cluster = this.decorateCluster(this.getCluster(width, rawRows))
+    if (cluster.lines.length === 0 && !this.paintedFixedCluster) return
 
+    const delta = buildFixedClusterPaintDelta(
+      this.paintedFixedCluster,
+      cluster,
+      rawRows,
+      width,
+      this.getShowHardwareCursor(),
+    )
     this.originalWrite(
       beginSynchronizedOutput() +
         disableAutoWrap() +
-        buildFixedClusterPaint(
-          this.decorateCluster(cluster),
-          rawRows,
-          width,
-          this.getShowHardwareCursor(),
-        ) +
+        delta.clearBefore +
+        delta.paintAfter +
         enableAutoWrap() +
         this.mouseReportingStateGuard() +
         endSynchronizedOutput(),
     )
+    this.paintedFixedCluster = delta.snapshot
   }
 
   dispose(options: DisposeOptions = {}): void {
@@ -1209,7 +1287,12 @@ export class TerminalSplitCompositor {
   }
 
   private write(data: string): void {
-    if (this.disposed || this.writing || this.hasVisibleOverlay()) {
+    if (this.disposed || this.writing) {
+      this.originalWrite(data)
+      return
+    }
+    if (this.hasVisibleOverlay()) {
+      this.paintedFixedCluster = null
       this.originalWrite(data)
       return
     }
@@ -1218,14 +1301,28 @@ export class TerminalSplitCompositor {
     try {
       const rawRows = this.getRawRows()
       const width = Math.max(1, this.terminal.columns || 80)
-      const cluster = this.getCluster(width, rawRows)
+      const cluster = this.decorateCluster(this.getCluster(width, rawRows))
       const reservedRows = cluster.lines.length
 
-      if (reservedRows === 0 || rawRows <= 2) {
+      if (rawRows <= 2) {
+        this.paintedFixedCluster = null
+        this.originalWrite(data)
+        return
+      }
+      if (reservedRows === 0 && !this.paintedFixedCluster) {
         this.originalWrite(data)
         return
       }
 
+      const body = stripSynchronizedOutputMarkers(data)
+      const delta = buildFixedClusterPaintDelta(
+        this.paintedFixedCluster,
+        cluster,
+        rawRows,
+        width,
+        this.getShowHardwareCursor(),
+        SCREEN_INVALIDATION_PATTERN.test(body),
+      )
       const scrollBottom = Math.max(1, rawRows - reservedRows)
       const hardwareCursorRow =
         typeof this.tui.hardwareCursorRow === "number"
@@ -1244,20 +1341,17 @@ export class TerminalSplitCompositor {
       const buffer =
         beginSynchronizedOutput() +
         disableAutoWrap() +
+        delta.clearBefore +
         setScrollRegion(1, scrollBottom) +
         moveCursor(screenRow, 1) +
-        data +
-        buildFixedClusterPaint(
-          this.decorateCluster(cluster),
-          rawRows,
-          width,
-          this.getShowHardwareCursor(),
-        ) +
+        body +
+        delta.paintAfter +
         enableAutoWrap() +
         this.mouseReportingStateGuard() +
         endSynchronizedOutput()
 
       this.originalWrite(buffer)
+      this.paintedFixedCluster = delta.snapshot
       if (this.renderPassActive) this.renderPassPaintedCluster = true
     } finally {
       this.writing = false
