@@ -1,11 +1,11 @@
 ---
 id: TASK-002
 title: Fix pi-fixed-editor flicker and long-session responsiveness
-status: In Progress
+status: Done
 assignee:
   - "@amp"
 created_date: "2026-06-10 17:32"
-updated_date: "2026-08-08 07:41"
+updated_date: "2026-08-08 07:43"
 labels: []
 dependencies: []
 modified_files:
@@ -25,10 +25,10 @@ Address remaining pi-fixed-editor UX issues from the original TASK-001 scope: fi
 
 <!-- AC:BEGIN -->
 
-- [ ] #1 Editor does not flicker while agent activity causes frequent message updates
-- [ ] #2 Rendering work is reduced for long sessions so editor responsiveness is closer to a fresh session
-- [ ] #3 Changes preserve fixed editor/footer behavior and transcript scrolling behavior
-- [ ] #4 Targeted tests or measurable checks cover repaint stability and long-session rendering work
+- [x] #1 Editor does not flicker while agent activity causes frequent message updates
+- [x] #2 Rendering work is reduced for long sessions so editor responsiveness is closer to a fresh session
+- [x] #3 Changes preserve fixed editor/footer behavior and transcript scrolling behavior
+- [x] #4 Targeted tests or measurable checks cover repaint stability and long-session rendering work
 
 <!-- AC:END -->
 
@@ -47,5 +47,12 @@ Address remaining pi-fixed-editor UX issues from the original TASK-001 scope: fi
 
 <!-- SECTION:NOTES:BEGIN -->
 
-Added a patch changeset for the streaming-flicker fix. Manual verification in regular TUI mode is pending.
+Added a patch changeset for the streaming-flicker fix. Manual verification in regular TUI mode passed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+
+Reduced streaming repaint work, added regression coverage, and verified the fixed editor in regular TUI mode. Passed typecheck, lint, format, and 19 package tests.
+<!-- SECTION:FINAL_SUMMARY:END -->
