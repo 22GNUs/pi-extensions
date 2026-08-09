@@ -344,6 +344,36 @@ function descriptorForRows(
   return undefined
 }
 
+// Pi 0.84+ wraps the TUI in a Proxy (createInteractiveTuiReference) whose `get`
+// returns a fresh closure that re-resolves the method on every call, and whose
+// `set` writes through to the real TUI. Capturing an "original" via
+// `proxy.method.bind(proxy)` therefore yields a closure that, once we overwrite
+// the method, re-resolves back to our own replacement -> infinite recursion.
+// Resolve the real prototype method instead (the proxy exposes the real chain
+// via its getPrototypeOf trap), then bind it to the proxy as receiver so the
+// method's internal `this.*` access still flows through Pi's TUI reference.
+function resolveRealTuiMethod(
+  tui: object,
+  name: string,
+): ((...args: unknown[]) => unknown) | null {
+  // Plain object or non-proxy TUI: the method is an own property and is the
+  // real function. For Pi 0.84+'s proxy (target `{}`, no getOwnPropertyDescriptor
+  // trap) this returns undefined, so we never capture the re-resolving wrapper.
+  const own = Object.getOwnPropertyDescriptor(tui, name)
+  if (own && typeof own.value === "function") {
+    return own.value as (...args: unknown[]) => unknown
+  }
+  let proto = Object.getPrototypeOf(tui)
+  while (proto && proto !== Object.prototype) {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, name)
+    if (descriptor && typeof descriptor.value === "function") {
+      return descriptor.value as (...args: unknown[]) => unknown
+    }
+    proto = Object.getPrototypeOf(proto)
+  }
+  return null
+}
+
 function readRows(
   terminal: TerminalLike,
   descriptor: PropertyDescriptor | undefined,
@@ -521,14 +551,12 @@ export class TerminalSplitCompositor {
     this.onCopySelection = options.onCopySelection ?? null
     this.rowsDescriptor = descriptorForRows(options.terminal)
     this.originalWrite = options.terminal.write.bind(options.terminal)
-    this.originalDoRender =
-      typeof options.tui.doRender === "function"
-        ? options.tui.doRender.bind(options.tui)
-        : null
-    this.originalRender =
-      typeof options.tui.render === "function"
-        ? options.tui.render.bind(options.tui)
-        : null
+    const doRenderFn = resolveRealTuiMethod(options.tui, "doRender")
+    this.originalDoRender = doRenderFn ? doRenderFn.bind(options.tui) : null
+    const renderFn = resolveRealTuiMethod(options.tui, "render")
+    this.originalRender = renderFn
+      ? (width: number) => renderFn.call(options.tui, width) as string[]
+      : null
   }
 
   install(): void {
@@ -584,8 +612,9 @@ export class TerminalSplitCompositor {
         }
       }
     }
-    if (typeof this.tui.compositeLineAt === "function") {
-      this.originalCompositeLineAt = this.tui.compositeLineAt.bind(
+    const compositeFn = resolveRealTuiMethod(this.tui, "compositeLineAt")
+    if (compositeFn) {
+      this.originalCompositeLineAt = compositeFn.bind(
         this.tui,
       ) as CompositeLineAt
       this.tui.compositeLineAt = (
