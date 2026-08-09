@@ -20,9 +20,9 @@ Wondering which packages I use myself? See my [current pi settings](https://gith
 
 ## Deprecated
 
-| Package                                              | Downloads                                                                      | Replacement                                                                                       |
+| Package                                              | Downloads                                                                      | Description                                                                                       |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| [`@tifan/pi-fixed-editor`](packages/pi-fixed-editor) | ![npm monthly downloads](https://img.shields.io/npm/dm/@tifan/pi-fixed-editor) | [Pi 0.84.1 or newer with native fullscreen mode](https://pi.dev/docs/latest/settings#ui-display). |
+| [`@tifan/pi-fixed-editor`](packages/pi-fixed-editor) | ![npm monthly downloads](https://img.shields.io/npm/dm/@tifan/pi-fixed-editor) | Keep the pi editor and footer fixed while the transcript scrolls. |
 
 ## Install
 
