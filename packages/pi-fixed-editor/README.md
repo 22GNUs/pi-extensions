@@ -1,7 +1,7 @@
 # @tifan/pi-fixed-editor
 
 > [!WARNING]
-> This package is deprecated for Pi 0.84.1 and newer. Use Pi's native fullscreen mode instead. Support for older Pi versions is frozen.
+> This package is deprecated for Pi 0.84.1 and newer. Use [Pi's native fullscreen mode](https://pi.dev/docs/latest/settings#ui-display) instead. Support for older Pi versions is frozen.
 
 ## Migrate to native fullscreen
 
