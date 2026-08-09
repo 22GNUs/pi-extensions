@@ -1,31 +1,33 @@
 # @tifan/pi-fixed-editor
 
-Keep Pi's editor, footer, and editor-adjacent widgets fixed at the bottom of the terminal while the transcript scrolls.
+> [!WARNING]
+> This package is deprecated for Pi 0.84.1 and newer. Use Pi's native fullscreen mode instead. Support for older Pi versions is frozen.
 
-## Install
+## Migrate to native fullscreen
+
+Remove this package:
+
+```bash
+pi remove npm:@tifan/pi-fixed-editor
+```
+
+Then enable fullscreen mode in one of these ways:
+
+- Open `/settings` and set **TUI mode** to `fullscreen`.
+- Add `"tuiMode": "fullscreen"` to `~/.pi/agent/settings.json`.
+- Start Pi with `pi --tui-mode fullscreen`.
+
+Native fullscreen keeps the editor, status, widgets, and footer fixed while the transcript scrolls.
+
+## Legacy support
+
+On Pi versions before 0.84, the extension continues to provide its existing fixed-editor behavior. No further fixes are planned.
 
 ```bash
 pi install npm:@tifan/pi-fixed-editor
 ```
 
-## What it does
-
-- Pins Pi's existing editor/footer area to the bottom of the terminal.
-- Keeps `aboveEditor` and `belowEditor` widgets with the editor.
-- Preserves existing editor behavior, footer content, and autocomplete.
-- Routes mouse wheel and PageUp/PageDown scrolling to the transcript.
-- Jumps the transcript back to the bottom when you submit a query with Enter.
-
-## What it does not do
-
-- No styling.
-- No powerline footer.
-- No commands.
-- No settings.
-- No custom shortcuts.
-- No print or RPC mode behavior.
-
-Uninstall or disable the extension to return to Pi's default scrolling behavior.
+Pi 0.84.0 users should upgrade to Pi 0.84.1 or newer and use native fullscreen mode.
 
 ## Credits
 
