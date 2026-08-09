@@ -1,5 +1,11 @@
 # @tifan/pi-fixed-editor
 
+## 0.2.7
+
+### Patch Changes
+
+- [#26](https://github.com/tifandotme/pi-extensions/pull/26) [`fb21134`](https://github.com/tifandotme/pi-extensions/commit/fb21134c861e75f0951500387a6d6698379a7209) Thanks [@libin](https://github.com/libin)! - Fix an infinite render loop on Pi 0.84+, which wraps the TUI in a re-resolving proxy. The compositor now captures the real underlying `render`, `doRender`, and `compositeLineAt` methods instead of the proxy's per-call wrappers, so the fixed editor loads and scrolls again.
+
 ## 0.2.6
 
 ### Patch Changes
