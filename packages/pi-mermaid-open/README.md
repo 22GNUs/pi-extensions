@@ -1,8 +1,8 @@
 # @tifan/pi-mermaid-open
 
-Extract Mermaid diagrams from recent pi assistant messages, render them to SVG, and open them in the system viewer.
+Find Mermaid diagrams that Pi left unrendered and show one in a terminal image popup.
 
-The command scans the last 50 assistant messages for ` ```mermaid ` or ` ```mmd ` fences. If it finds more than one diagram, pi shows a picker with the message offset, diagram type, and title. Rendering uses `@mermaid-js/mermaid-cli` via `bunx`. SVGs are written under `<agent-dir>/artifacts/mermaid/` and opened with `open` on macOS, `xdg-open` on Linux, or `start` on Windows.
+The command scans the last 50 assistant messages for ` ```mermaid ` or ` ```mmd ` fences. It hides diagrams that Pi already rendered and labels skipped diagrams by reason, such as unsupported type or excessive width. Rendering uses `@mermaid-js/mermaid-cli` via `bunx` and PNG output. In TUI mode, Pi displays the PNG with its Kitty/iTerm2 image support and removes the temporary file when the popup closes. Outside TUI mode, the PNG is saved under `<agent-dir>/artifacts/mermaid/`.
 
 ## Install
 

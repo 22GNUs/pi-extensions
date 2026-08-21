@@ -1,7 +1,7 @@
 {
   "name": "@tifan/pi-mermaid-open",
   "version": "0.1.3",
-  "description": "Extract and open Mermaid diagrams from pi agent responses.",
+  "description": "Find skipped Mermaid diagrams and show them in a terminal image popup.",
   "keywords": [
     "diagram",
     "mermaid",
@@ -27,6 +27,9 @@
   "publishConfig": {
     "access": "public",
     "provenance": true
+  },
+  "dependencies": {
+    "grok-mermaid": "0.2.2"
   },
   "engines": {
     "node": ">=20"
