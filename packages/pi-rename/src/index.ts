@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process"
+import path from "node:path"
 import { promisify } from "node:util"
 import type { AgentMessage } from "@earendil-works/pi-agent-core"
 import {
@@ -64,18 +65,46 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>
 }
 
+interface HerdrPaneInfo {
+  readonly id: string
+  readonly label?: string
+  readonly tabId: string
+}
+
 interface HerdrTabInfo {
   readonly id: string
   readonly label?: string
   readonly number?: number
+  readonly paneCount?: number
 }
 
-function extractTabId(stdout: string): string | undefined {
+interface HerdrContext {
+  readonly pane: HerdrPaneInfo
+  readonly tab: HerdrTabInfo
+}
+
+function extractPaneInfo(stdout: string): HerdrPaneInfo | undefined {
   const parsed = asRecord(JSON.parse(stdout) as unknown)
   const result = asRecord(parsed?.["result"])
   const pane = asRecord(result?.["pane"])
+  const paneId = pane?.["pane_id"]
   const tabId = pane?.["tab_id"]
-  return typeof tabId === "string" && tabId.trim() ? tabId : undefined
+
+  if (
+    typeof paneId !== "string" ||
+    !paneId.trim() ||
+    typeof tabId !== "string" ||
+    !tabId.trim()
+  ) {
+    return undefined
+  }
+
+  const label = pane?.["label"]
+  return {
+    id: paneId,
+    tabId,
+    ...(typeof label === "string" ? { label } : {}),
+  }
 }
 
 function extractTabInfo(stdout: string): HerdrTabInfo | undefined {
@@ -88,28 +117,35 @@ function extractTabInfo(stdout: string): HerdrTabInfo | undefined {
 
   const label = tab?.["label"]
   const number = tab?.["number"]
+  const paneCount = tab?.["pane_count"]
 
   return {
     id: tabId,
     ...(typeof label === "string" ? { label } : {}),
     ...(typeof number === "number" ? { number } : {}),
+    ...(typeof paneCount === "number" ? { paneCount } : {}),
   }
 }
 
-async function getCurrentHerdrTabId(): Promise<string | undefined> {
+async function getCurrentHerdrContext(): Promise<HerdrContext | undefined> {
   const paneId = process.env["HERDR_PANE_ID"]?.trim()
   if (!paneId) return undefined
 
-  const { stdout } = await execFileAsync("herdr", ["pane", "get", paneId])
-  return extractTabId(stdout)
-}
+  const { stdout: paneStdout } = await execFileAsync("herdr", [
+    "pane",
+    "get",
+    paneId,
+  ])
+  const pane = extractPaneInfo(paneStdout)
+  if (!pane) return undefined
 
-async function getCurrentHerdrTabInfo(): Promise<HerdrTabInfo | undefined> {
-  const tabId = await getCurrentHerdrTabId()
-  if (!tabId) return undefined
-
-  const { stdout } = await execFileAsync("herdr", ["tab", "get", tabId])
-  return extractTabInfo(stdout)
+  const { stdout: tabStdout } = await execFileAsync("herdr", [
+    "tab",
+    "get",
+    pane.tabId,
+  ])
+  const tab = extractTabInfo(tabStdout)
+  return tab ? { pane, tab } : undefined
 }
 
 function isDefaultHerdrTabLabel(tab: HerdrTabInfo): boolean {
@@ -119,22 +155,49 @@ function isDefaultHerdrTabLabel(tab: HerdrTabInfo): boolean {
   return typeof tab.number === "number" && label === String(tab.number)
 }
 
-async function renameCurrentHerdrTab(name: string): Promise<boolean> {
-  const tabId = await getCurrentHerdrTabId()
-  if (!tabId) return false
+function isPiWrapperLabel(label: string | undefined): boolean {
+  return label?.trim() === `${path.basename(process.cwd())} (pi)`
+}
 
-  await execFileAsync("herdr", ["tab", "rename", tabId, name])
+function canRenameSessionStart(context: HerdrContext): boolean {
+  const singlePane = context.tab.paneCount === 1
+  const label = singlePane ? context.tab.label : context.pane.label
+  return (
+    (singlePane ? isDefaultHerdrTabLabel(context.tab) : !label?.trim()) ||
+    isPiWrapperLabel(label)
+  )
+}
+
+async function renameHerdrTarget(
+  context: HerdrContext,
+  name: string,
+): Promise<boolean> {
+  await execFileAsync("herdr", ["pane", "rename", context.pane.id, name])
+  if (context.tab.paneCount === 1) {
+    await execFileAsync("herdr", ["tab", "rename", context.tab.id, name])
+  }
   return true
 }
 
-async function renameCurrentHerdrTabIfDefault(name: string): Promise<boolean> {
-  const tab = await getCurrentHerdrTabInfo()
-  if (!tab || tab.label?.trim() === name || !isDefaultHerdrTabLabel(tab)) {
+async function renameCurrentHerdrTarget(name: string): Promise<boolean> {
+  const context = await getCurrentHerdrContext()
+  return context ? renameHerdrTarget(context, name) : false
+}
+
+async function renameCurrentHerdrTargetIfDefault(
+  name: string,
+): Promise<boolean> {
+  const context = await getCurrentHerdrContext()
+  if (
+    !context ||
+    !canRenameSessionStart(context) ||
+    context.tab.label?.trim() === name ||
+    context.pane.label?.trim() === name
+  ) {
     return false
   }
 
-  await execFileAsync("herdr", ["tab", "rename", tab.id, name])
-  return true
+  return renameHerdrTarget(context, name)
 }
 
 function hasSessionContextReader(
@@ -161,7 +224,7 @@ function getCurrentSessionMessages(ctx: ExtensionContext): AgentMessage[] {
 
 async function applyRename(pi: ExtensionAPI, name: string): Promise<boolean> {
   pi.setSessionName(name)
-  return renameCurrentHerdrTab(name)
+  return renameCurrentHerdrTarget(name)
 }
 
 async function runRenameCommand(
@@ -202,7 +265,7 @@ async function runRenameCommand(
         [
           `Session renamed with fallback: ${result.name}`,
           `Could not use rename model: ${result.reason}`,
-          ...(herdrError ? [`Herdr tab rename failed: ${herdrError}`] : []),
+          ...(herdrError ? [`Herdr label rename failed: ${herdrError}`] : []),
         ].join("\n"),
         "warning",
       )
@@ -211,7 +274,7 @@ async function runRenameCommand(
 
     if (herdrError) {
       ctx.ui.notify(
-        `Session renamed, but Herdr tab rename failed: ${herdrError}`,
+        `Session renamed, but Herdr label rename failed: ${herdrError}`,
         "warning",
       )
       return
@@ -219,7 +282,7 @@ async function runRenameCommand(
 
     ctx.ui.notify(
       renamedHerdr
-        ? `Session and Herdr tab renamed: ${result.name}`
+        ? `Session and Herdr label renamed: ${result.name}`
         : `Session renamed: ${result.name}`,
       "info",
     )
@@ -298,7 +361,7 @@ async function notifyRenameStatus(
   }
 
   const context = getUserMessageContext(getCurrentSessionMessages(ctx))
-  const herdrLine = `herdr tab: ${process.env["HERDR_PANE_ID"]?.trim() ? "available" : "unavailable"}`
+  const herdrLine = `herdr: ${process.env["HERDR_PANE_ID"]?.trim() ? "available" : "unavailable"}`
   const contextLine = `context: ${context?.count ?? 0} user messages`
 
   ctx.ui.notify(
@@ -366,7 +429,7 @@ export default function (pi: ExtensionAPI): void {
     if (!sessionName) return
 
     try {
-      await renameCurrentHerdrTabIfDefault(sessionName)
+      await renameCurrentHerdrTargetIfDefault(sessionName)
     } catch {
       // Keep session startup quiet if Herdr is unavailable or rejects the rename.
     }
