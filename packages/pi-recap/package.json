@@ -28,6 +28,9 @@
     "access": "public",
     "provenance": true
   },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": ">=0.84.2"
+  },
   "engines": {
     "node": ">=20"
   },
