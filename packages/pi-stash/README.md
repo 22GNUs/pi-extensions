@@ -27,6 +27,10 @@ Press `Ctrl+S` again while the editor is empty to restore the draft manually. If
 
 The stash belongs to the current session and survives reloads and restarts. Slash commands and `!` shell commands do not consume it.
 
+## Release notes
+
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-stash/CHANGELOG.md)
+
 ## License
 
 [MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)
