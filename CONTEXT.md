@@ -14,9 +14,13 @@ A pi extension behavior that generates a short task name from bounded user-messa
 
 A durable markdown artifact that summarizes the current session so another agent or a future session can continue the work.
 
+### Handoff request
+
+A submitted prompt containing a standalone `-handoff` token. The text around the token becomes the focus for the next handoff session. If no text remains, the request means continue the current work.
+
 ### Handoff session
 
-A new pi session started from a handoff generated from the current pi session. The pi-handoff extension requires a discoverable skill named exactly `handoff` and uses that skill as the policy source for the generated artifact. The command takes no slash args; it asks for the next session focus with a one-line input. Handoff generation uses the current selected model with no model-specific config. The artifact uses a stable, readable temp-file name. The new session references the generated temp-file handoff instead of inlining it, and leaves the prompt in the editor for manual submission.
+A new pi session created from a handoff artifact so another agent or future session can continue the work. It keeps a link to the previous session when available and starts the continuation work automatically.
 
 ### Session query
 

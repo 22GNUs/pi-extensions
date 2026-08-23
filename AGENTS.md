@@ -19,7 +19,7 @@ Each package has:
 - Supporting `.ts` files in `src/`.
 - `tsconfig.json` extending `../../tsconfig.base.json`.
 - `LICENSE` symlinked to the root `LICENSE`.
-- `README.md` with install snippet, tools/commands list, and a `Credits` section if the package is a fork.
+- `README.md` with an install snippet and usage or commands when applicable, plus a `Credits` section if the package is a fork.
 
 Keep the root `README.md` package table in sync whenever a package is added, removed, renamed, or its package README or description changes.
 
@@ -86,7 +86,7 @@ Fix errors before moving on. Keep typecheck before final format because type err
 
 - TypeScript, no build step.
 - Conventional Commits (`feat`, `fix`, `chore`, `docs`, ...). Lowercase subject, no period, header under 72 chars.
-- One npm package per extension. No cross-package imports.
+- One npm package per extension. Prefer no cross-package imports. If a package reuses another extension's published functionality, declare the dependency and import its public export.
 - Keep package TypeScript under `src/`.
 - `master` is the default branch.
 - Bun is the package manager; commit `bun.lock`.
