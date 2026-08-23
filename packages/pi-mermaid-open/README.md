@@ -2,7 +2,7 @@
 
 Find Mermaid diagrams that Pi left unrendered and show one in a terminal image viewer.
 
-https://github.com/user-attachments/assets/d0c1d46f-0cba-4bf3-a44e-9aa0f4b8e3fd
+![Mermaid diagram viewer demo](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-mermaid-open/assets/demo.webp)
 
 ## How it works
 
