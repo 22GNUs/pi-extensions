@@ -1,10 +1,6 @@
 # @tifan/pi-preferred-thinking
 
-Apply per-model thinking levels from `~/.config/pi/extensions/pi-preferred-thinking.json` when sessions start or models change.
-
-This extension is for model-specific preferences. Pi's built-in `defaultThinkingLevel` remains global, while `preferredThinking` lets you choose different levels for different models. Invalid or missing values are ignored.
-
-![Preferred thinking picker showing model-specific thinking levels](https://raw.githubusercontent.com/tifandotme/pi-extensions/refs/heads/master/packages/pi-preferred-thinking/assets/picker.webp)
+Set and apply per-model thinking levels from Pi's native `enabledModels` setting.
 
 ## Install
 
@@ -12,26 +8,42 @@ This extension is for model-specific preferences. Pi's built-in `defaultThinking
 pi install npm:@tifan/pi-preferred-thinking
 ```
 
+This package requires Pi 0.84.2 or newer.
+
+## How it works
+
+Run `/preferred-thinking` to choose a thinking level for the current model. The
+extension writes the model pin to Pi's `settings.json` and reloads Pi so the
+native model scope uses it.
+
+When Pi selects a scoped model, the extension applies its native thinking pin.
+It also applies the pin when the model picker is used, which keeps model cycling
+and model selection consistent.
+
+If a reasoning model has no saved pin, the extension shows a short hint above
+the editor. It does not change the current thinking level in that case.
+
 ## Configuration
 
-Run `/preferred-thinking` to set or unset the preferred thinking level for the current model.
-
-Valid levels: `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`.
-
-The extension saves preferences in `~/.config/pi/extensions/pi-preferred-thinking.json`:
+Add models to Pi's `enabledModels` setting. The extension preserves other
+entries and updates only the selected model:
 
 ```json
 {
-  "preferredThinking": {
-    "anthropic/claude-opus-4-8": "high",
-    "openai-codex/gpt-5.6-luna": "minimal"
-  }
+  "enabledModels": [
+    "openai-codex/gpt-5.6-luna:xhigh",
+    "openai-codex/gpt-5.6-terra:high"
+  ]
 }
 ```
 
-## Release notes
+The extension requires `enabledModels` to exist before it can save a pin. If
+the selected model is not listed, it adds an exact entry without removing other
+models or patterns.
 
-See [CHANGELOG.md](CHANGELOG.md)
+The old `~/.config/pi/extensions/pi-preferred-thinking.json` file is no longer
+read. Existing users must move preferences to `enabledModels` or set them with
+`/preferred-thinking`.
 
 ## License
 
