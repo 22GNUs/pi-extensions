@@ -12,6 +12,8 @@ Re-enter a session without rereading the transcript.
 pi install npm:@tifan/pi-recap
 ```
 
+This package requires Pi 0.84.2 or newer.
+
 ## How it works
 
 - `/recap` generates a fresh, goal-first recap and shows it above the editor.
@@ -34,7 +36,7 @@ A good recap should answer "what was I trying to do here?". For example:
 
 ## Configuration
 
-Out of the box, `pi-recap` uses this default model: `openai-codex/gpt-5.4-mini`.
+Out of the box, `pi-recap` uses this default model: `openai-codex/gpt-5.6-luna`.
 
 Run `/recap config` to choose a different model.
 
@@ -46,7 +48,7 @@ You can also edit `~/.config/pi/extensions/pi-recap.json` manually:
 
 ```json
 {
-  "model": "openai-codex/gpt-5.4-mini"
+  "model": "openai-codex/gpt-5.6-luna"
 }
 ```
 
