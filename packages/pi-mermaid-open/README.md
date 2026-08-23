@@ -23,9 +23,9 @@ pi install npm:@tifan/pi-mermaid-open
 ## Requirements
 
 - Bun is optional. The extension uses `bunx -y @mermaid-js/mermaid-cli` when Bun is available and falls back to `npx -y @mermaid-js/mermaid-cli`.
+- Herdr with Kitty graphics support is optional. Other TUI sessions use Pi's image viewer.
 - Network access on first use unless Mermaid CLI is already cached.
 - A Chromium browser available to Puppeteer. The extension skips Puppeteer's automatic browser download, so Puppeteer must find an existing cache or configured browser executable.
-- Herdr with Kitty graphics support is optional. Other TUI sessions use Pi's image viewer.
 
 ## Commands
 
