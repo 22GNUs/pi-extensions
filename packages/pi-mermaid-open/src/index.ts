@@ -1,7 +1,9 @@
-import { spawn } from "node:child_process"
+import { execFile, spawn } from "node:child_process"
 import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { promisify } from "node:util"
 import { diagramKind, render as renderNativeMermaid } from "grok-mermaid"
 import {
   Box,
@@ -76,8 +78,14 @@ type PiSettings = {
   }
 }
 
-const SCAN_ASSISTANT_MESSAGE_LIMIT = 50
+const execFileAsync = promisify(execFile)
 const OUTPUT_DIR = path.join(getAgentDir(), "artifacts", "mermaid")
+const HERDR_PLUGIN_ID = "pi-mermaid-open"
+const HERDR_PLUGIN_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "herdr-plugin",
+)
 const MERMAID_FENCE_PATTERN = /```\s*(mermaid|mmd)\b[^\n]*\n([\s\S]*?)```/gi
 
 function isTextBlock(value: unknown): value is TextBlock {
@@ -241,7 +249,6 @@ function discoverDiagrams(
     .filter(isMessageEntry)
     .map((entry) => entry.message)
     .filter(isAssistantMessage)
-    .slice(-SCAN_ASSISTANT_MESSAGE_LIMIT)
     .toReversed()
 
   const diagrams: MermaidDiagram[] = []
@@ -319,11 +326,27 @@ async function renderMermaidToPng(
   ok: boolean
   error?: string
 }> {
+  const bunx = os.platform() === "win32" ? "bunx.cmd" : "bunx"
+  let command = bunx
+  try {
+    await execFileAsync(bunx, ["--version"])
+  } catch {
+    command = os.platform() === "win32" ? "npx.cmd" : "npx"
+  }
+
   return new Promise((resolve) => {
-    const command = os.platform() === "win32" ? "bunx.cmd" : "bunx"
     const child = spawn(
       command,
-      ["-y", "@mermaid-js/mermaid-cli", "-i", "-", "-o", pngPath],
+      [
+        "-y",
+        "@mermaid-js/mermaid-cli",
+        "-i",
+        "-",
+        "-o",
+        pngPath,
+        "--scale",
+        "4",
+      ],
       {
         env: { ...process.env, PUPPETEER_CHROME_SKIP_DOWNLOAD: "true" },
       },
@@ -414,6 +437,34 @@ class MermaidImageViewer implements Component {
   }
 }
 
+async function showPngInHerdrOverlay(pngPath: string): Promise<boolean> {
+  try {
+    await execFileAsync("herdr", [
+      "plugin",
+      "link",
+      HERDR_PLUGIN_ROOT,
+      "--enabled",
+    ])
+    await execFileAsync("herdr", [
+      "plugin",
+      "pane",
+      "open",
+      "--plugin",
+      HERDR_PLUGIN_ID,
+      "--entrypoint",
+      "viewer",
+      "--placement",
+      "overlay",
+      "--env",
+      `PI_MERMAID_OPEN_PNG=${pngPath}`,
+      "--focus",
+    ])
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function showPngInTerminal(
   ctx: ExtensionCommandContext,
   pngPath: string,
@@ -474,8 +525,13 @@ export default function (pi: ExtensionAPI): void {
 
       if (!selected) return
 
+      const imageCapabilities = getCapabilities()
+      const canDisplayInHerdr =
+        ctx.mode === "tui" &&
+        Boolean(process.env["HERDR_PANE_ID"]) &&
+        imageCapabilities.images === "kitty"
       const canDisplayInTerminal =
-        ctx.mode === "tui" && Boolean(getCapabilities().images)
+        ctx.mode === "tui" && Boolean(imageCapabilities.images)
       const temporaryDirectory = canDisplayInTerminal
         ? await mkdtemp(path.join(os.tmpdir(), "pi-mermaid-open-"))
         : undefined
@@ -495,6 +551,7 @@ export default function (pi: ExtensionAPI): void {
         })
       }
 
+      let handedOffToHerdr = false
       try {
         const renderResult = await renderMermaidToPng(selected.source, pngPath)
         if (!renderResult.ok) {
@@ -503,6 +560,15 @@ export default function (pi: ExtensionAPI): void {
             "error",
           )
           return
+        }
+
+        if (canDisplayInHerdr) {
+          handedOffToHerdr = await showPngInHerdrOverlay(pngPath)
+          if (handedOffToHerdr) return
+          ctx.ui.notify(
+            "Herdr overlay unavailable; opening Mermaid in Pi instead.",
+            "warning",
+          )
         }
 
         if (ctx.mode !== "tui" || !canDisplayInTerminal) {
@@ -520,7 +586,7 @@ export default function (pi: ExtensionAPI): void {
         if (ctx.mode === "tui") {
           ctx.ui.setWidget("pi-mermaid-open", undefined)
         }
-        if (temporaryDirectory) {
+        if (temporaryDirectory && !handedOffToHerdr) {
           await rm(temporaryDirectory, { recursive: true, force: true })
         }
       }
