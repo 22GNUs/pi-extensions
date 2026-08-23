@@ -45,6 +45,10 @@ The old `~/.config/pi/extensions/pi-preferred-thinking.json` file is no longer
 read. Existing users must move preferences to `enabledModels` or set them with
 `/preferred-thinking`.
 
+## Release notes
+
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-preferred-thinking/CHANGELOG.md)
+
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)

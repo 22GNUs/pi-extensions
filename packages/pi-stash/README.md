@@ -29,4 +29,4 @@ The stash belongs to the current session and survives reloads and restarts. Slas
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)

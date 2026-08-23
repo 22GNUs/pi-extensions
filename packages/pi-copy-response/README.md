@@ -18,8 +18,8 @@ pi install npm:@tifan/pi-copy-response
 
 ## Release notes
 
-See [CHANGELOG.md](CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-copy-response/CHANGELOG.md)
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)

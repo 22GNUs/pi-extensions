@@ -59,6 +59,10 @@ On quit, the Herdr tab keeps the last session name.
 
 If pi is not running inside Herdr, only the pi session name is updated.
 
+## Release notes
+
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-rename/CHANGELOG.md)
+
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)

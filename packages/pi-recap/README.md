@@ -52,8 +52,8 @@ You can also edit `~/.config/pi/extensions/pi-recap.json` manually:
 
 ## Release notes
 
-See [CHANGELOG.md](CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-recap/CHANGELOG.md)
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)

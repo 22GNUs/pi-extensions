@@ -33,6 +33,10 @@ Pi 0.84.0 users should upgrade to Pi 0.84.1 or newer and use native fullscreen m
 
 Fixed terminal-region behavior is adapted from [pi-powerline-footer](https://github.com/nicobailon/pi-powerline-footer) by Nico Bailon.
 
+## Release notes
+
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-fixed-editor/CHANGELOG.md)
+
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)

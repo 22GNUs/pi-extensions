@@ -43,8 +43,8 @@ The handoff includes the previous session path when available, so the next agent
 
 ## Release notes
 
-See [CHANGELOG.md](CHANGELOG.md)
+See [CHANGELOG.md](https://github.com/tifandotme/pi-extensions/blob/master/packages/pi-handoff/CHANGELOG.md)
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/tifandotme/pi-extensions/blob/master/LICENSE)
