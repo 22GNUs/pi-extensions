@@ -41,7 +41,7 @@ The extension requires `enabledModels` to exist before it can save a pin. If
 the selected model is not listed, it adds an exact entry without removing other
 models or patterns.
 
-The old `~/.config/pi/extensions/pi-preferred-thinking.json` file is no longer
+The old `$PI_CODING_AGENT_DIR/extensions/pi-preferred-thinking.json` file is no longer
 read. Existing users must move preferences to `enabledModels` or set them with
 `/preferred-thinking`.
 

@@ -37,7 +37,7 @@ Run `/rename config` to choose a different model.
 
 After you choose a model, `pi-rename` uses only that model. Choose `Use default` in `/rename config` to return to the default.
 
-You can also edit `~/.config/pi/extensions/pi-rename.json` manually:
+You can also edit `$PI_CODING_AGENT_DIR/extensions/pi-rename.json` manually:
 
 ```json
 {

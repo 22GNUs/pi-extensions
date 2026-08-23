@@ -10,7 +10,7 @@ pi install npm:@tifan/pi-stash
 
 ## Keybinding
 
-pi-stash overrides Pi's built-in `Ctrl+S` shortcuts. Remap them in `$PI_CODING_AGENT_DIR/keybindings.json` (default: `~/.pi/agent/keybindings.json`), then run `/reload`:
+pi-stash overrides Pi's built-in `Ctrl+S` shortcuts. Remap them in `$PI_CODING_AGENT_DIR/keybindings.json`, then run `/reload`:
 
 ```json
 {

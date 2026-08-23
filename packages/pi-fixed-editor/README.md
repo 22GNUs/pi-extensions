@@ -14,7 +14,7 @@ pi remove npm:@tifan/pi-fixed-editor
 Then enable fullscreen mode in one of these ways:
 
 - Open `/settings` and set **TUI mode** to `fullscreen`.
-- Add `"tuiMode": "fullscreen"` to `~/.pi/agent/settings.json`.
+- Add `"tuiMode": "fullscreen"` to `$PI_CODING_AGENT_DIR/settings.json`.
 - Start Pi with `pi --tui-mode fullscreen`.
 
 Native fullscreen keeps the editor, status, widgets, and footer fixed while the transcript scrolls.
