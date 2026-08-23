@@ -8,11 +8,7 @@ Generate session names for pi and Herdr.
 pi install npm:@tifan/pi-rename
 ```
 
-For local development:
-
-```bash
-pi install /absolute/path/to/pi-extensions/packages/pi-rename
-```
+This package requires Pi 0.84.2 or newer.
 
 ## How it works
 
@@ -50,6 +46,8 @@ You can also edit `~/.config/pi/extensions/pi-rename.json` manually:
 ```
 
 ## Herdr behavior
+
+Herdr tab renaming requires the `herdr` CLI. If it is unavailable, the extension still renames the pi session.
 
 The extension uses `HERDR_PANE_ID` to find the current Herdr pane, then renames that pane's tab.
 

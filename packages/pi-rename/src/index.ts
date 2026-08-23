@@ -1,7 +1,10 @@
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
 import type { AgentMessage } from "@earendil-works/pi-agent-core"
-import type { AutocompleteItem } from "@earendil-works/pi-tui"
+import {
+  CancellableLoader,
+  type AutocompleteItem,
+} from "@earendil-works/pi-tui"
 import type {
   ExtensionAPI,
   ExtensionContext,
@@ -172,47 +175,57 @@ async function runRenameCommand(
     return
   }
 
-  const result = await generateRename(ctx, state.modelConfig, context)
-  if (!result) {
-    ctx.ui.notify("Could not generate a session name.", "error")
-    return
+  if (ctx.mode === "tui") {
+    ctx.ui.setWidget("pi-rename", (tui, theme) => {
+      const color = (text: string) => theme.fg("dim", text)
+      return new CancellableLoader(tui, color, color, "renaming session...")
+    })
   }
-
-  let renamedHerdr = false
-  let herdrError: string | undefined
-
   try {
-    renamedHerdr = await applyRename(pi, result.name)
-  } catch (error) {
-    herdrError = error instanceof Error ? error.message : String(error)
-  }
+    const result = await generateRename(ctx, state.modelConfig, context)
+    if (!result) {
+      ctx.ui.notify("Could not generate a session name.", "error")
+      return
+    }
 
-  if (result.source === "fallback") {
+    let renamedHerdr = false
+    let herdrError: string | undefined
+
+    try {
+      renamedHerdr = await applyRename(pi, result.name)
+    } catch (error) {
+      herdrError = error instanceof Error ? error.message : String(error)
+    }
+
+    if (result.source === "fallback") {
+      ctx.ui.notify(
+        [
+          `Session renamed with fallback: ${result.name}`,
+          `Could not use rename model: ${result.reason}`,
+          ...(herdrError ? [`Herdr tab rename failed: ${herdrError}`] : []),
+        ].join("\n"),
+        "warning",
+      )
+      return
+    }
+
+    if (herdrError) {
+      ctx.ui.notify(
+        `Session renamed, but Herdr tab rename failed: ${herdrError}`,
+        "warning",
+      )
+      return
+    }
+
     ctx.ui.notify(
-      [
-        `Session renamed with fallback: ${result.name}`,
-        `Could not use rename model: ${result.reason}`,
-        ...(herdrError ? [`Herdr tab rename failed: ${herdrError}`] : []),
-      ].join("\n"),
-      "warning",
+      renamedHerdr
+        ? `Session and Herdr tab renamed: ${result.name}`
+        : `Session renamed: ${result.name}`,
+      "info",
     )
-    return
+  } finally {
+    if (ctx.mode === "tui") ctx.ui.setWidget("pi-rename", undefined)
   }
-
-  if (herdrError) {
-    ctx.ui.notify(
-      `Session renamed, but Herdr tab rename failed: ${herdrError}`,
-      "warning",
-    )
-    return
-  }
-
-  ctx.ui.notify(
-    renamedHerdr
-      ? `Session and Herdr tab renamed: ${result.name}`
-      : `Session renamed: ${result.name}`,
-    "info",
-  )
 }
 
 function getRenameArgumentCompletions(
