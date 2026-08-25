@@ -304,24 +304,9 @@ function getRenameArgumentCompletions(
   prefix: string,
 ): AutocompleteItem[] | null {
   const query = prefix.trimStart().toLowerCase()
-  const items = [
-    ...RENAME_SUBCOMMANDS,
-    {
-      value: "config language auto",
-      label: "config language auto",
-      description: "Use latest user message language",
-    },
-    {
-      value: "config language en",
-      label: "config language en",
-      description: "Use English ASCII names",
-    },
-    {
-      value: "config language zh",
-      label: "config language zh",
-      description: "Use Chinese names",
-    },
-  ].filter((item) => item.value.startsWith(query))
+  const items = RENAME_SUBCOMMANDS.filter((item) =>
+    item.value.startsWith(query),
+  )
   return items.length > 0 ? items : null
 }
 
