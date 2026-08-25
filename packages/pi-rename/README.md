@@ -38,26 +38,25 @@ Run `/rename config` to choose a different model.
 
 After you choose a model, `pi-rename` uses only that model. Choose `Use default` in `/rename config` to return to the default.
 
-Session names default to English ASCII. Set another output language with a BCP 47 tag, or use `auto` to follow latest user message language:
+To preserve existing behavior, names use ASCII when no language is configured. Set an output language with a BCP 47 tag, or use `auto` to follow latest user message language:
 
 ```bash
-/rename config language zh
-/rename config language ja
+/rename config language <BCP-47-tag>
 /rename config language auto
 ```
 
-Non-English and `auto` names preserve Unicode letters and numbers. If rename model is unavailable, fallback uses latest user message and does not translate it.
+`auto` and non-`en` tags preserve Unicode letters and numbers. If rename model is unavailable, fallback uses latest user message and does not translate it.
 
 You can also edit `$PI_CODING_AGENT_DIR/extensions/pi-rename.json` manually:
 
 ```json
 {
   "model": "openai-codex/gpt-5.6-luna",
-  "language": "zh"
+  "language": "auto"
 }
 ```
 
-Use `"language": "en"` for default ASCII behavior. Missing or invalid language values also fall back to `en`.
+Use `"language": "en"` for ASCII compatibility mode. Missing or invalid language values also fall back to `en`.
 
 ## Herdr behavior
 

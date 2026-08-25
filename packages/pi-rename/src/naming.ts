@@ -16,7 +16,7 @@ export const RENAME_SYSTEM_PROMPT = `Name this coding-agent session.
 
 Return one lowercase hyphen-separated session name only.
 Use plain text, no quotes, no markdown, no trailing punctuation.
-Prefer an action-oriented task name like fix-auth-callback or design-pi-rename.
+Prefer an action-oriented task name.
 Stay under 60 characters.`
 
 export function buildRenameSystemPrompt(language: RenameLanguage): string {
