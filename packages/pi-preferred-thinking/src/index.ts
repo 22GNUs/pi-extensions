@@ -138,6 +138,15 @@ function showHint(ctx: ExtensionContext, modelKey: string): void {
   }, HINT_DURATION_MS)
 }
 
+function hasExplicitSubagentThinking(): boolean {
+  return (
+    Boolean(process.env["PI_SUBAGENT_ID"]) &&
+    process.argv.some(
+      (arg) => arg === "--thinking" || arg.startsWith("--thinking="),
+    )
+  )
+}
+
 function applyPreferredThinking(
   pi: ExtensionAPI,
   ctx: ExtensionContext,
@@ -210,11 +219,15 @@ export default function (pi: ExtensionAPI): void {
 
   pi.on("session_start", async (_event, ctx) => {
     nudgedModels.clear()
-    if (ctx.model) applyPreferredThinking(pi, ctx, ctx.model)
+    if (ctx.model && !hasExplicitSubagentThinking()) {
+      applyPreferredThinking(pi, ctx, ctx.model)
+    }
   })
 
   pi.on("model_select", async (event, ctx) => {
-    applyPreferredThinking(pi, ctx, event.model)
+    if (!hasExplicitSubagentThinking()) {
+      applyPreferredThinking(pi, ctx, event.model)
+    }
   })
 
   pi.on("session_shutdown", async (_event, ctx) => {
