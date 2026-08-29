@@ -105,9 +105,19 @@ function writeConfig(config: RenameConfig): void {
   writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`, "utf-8")
 }
 
+function readConfigForUpdate(): RenameConfig {
+  if (!existsSync(CONFIG_PATH)) return {}
+
+  try {
+    return readConfig()
+  } catch (error) {
+    if (error instanceof SyntaxError) return {}
+    throw error
+  }
+}
+
 function updateConfig(update: Partial<RenameConfig>): void {
-  const config = existsSync(CONFIG_PATH) ? readConfig() : {}
-  writeConfig({ ...config, ...update })
+  writeConfig({ ...readConfigForUpdate(), ...update })
 }
 
 export function saveModelPreference(
@@ -123,7 +133,7 @@ export function saveRenameLanguage(language: RenameLanguage): void {
 export function deleteModelPreference(): void {
   if (!existsSync(CONFIG_PATH)) return
 
-  const config = readConfig()
+  const config = readConfigForUpdate()
   delete config.model
   if (Object.keys(config).length === 0) {
     rmSync(CONFIG_PATH)
@@ -161,10 +171,6 @@ export function resolveInitialRenameConfig(): InitialRenameConfig {
       language: DEFAULT_RENAME_LANGUAGE,
     }
   }
-}
-
-export function resolveInitialModelConfig(): RenameModelConfig {
-  return resolveInitialRenameConfig().modelConfig
 }
 
 async function getModelAuth(
